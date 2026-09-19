@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ร้านค้า POS — ขายจบใน 5 คลิก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">🛒</span>
+    <div>
+      <h1>ร้านของชำลุงนพ</h1>
+      <p class="sub">ระบบขายหน้าร้าน (POS)</p>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input id="search" type="search" placeholder="ค้นหาสินค้า / รหัส / บาร์โค้ด…  (พิมพ์แล้วกด Enter เพื่อเพิ่มทันที)" autocomplete="off" autofocus />
+    <button id="clearSearch" class="clear-btn" type="button" title="ล้างคำค้นหา" hidden>✕</button>
+  </div>
+
+  <div class="click-meter" id="clickMeter" title="จำนวนคลิกในการขายรอบนี้">
+    <span class="click-count"><b id="clickCount">0</b>/5</span>
+    <span class="click-label">คลิก</span>
+  </div>
+
+  <nav class="nav">
+    <a class="nav-link active" href="index.html">🛒 หน้าขายสินค้า</a>
+    <a class="nav-link" href="products.html">📦 เพิ่มสินค้า</a>
+  </nav>
+</header>
+
+<main class="layout">
+  <section class="catalog">
+    <nav class="chips" id="categories"></nav>
+    <div class="grid" id="grid"></div>
+    <p class="empty" id="empty" hidden>ไม่พบสินค้าที่ตรงกับคำค้นหา</p>
+  </section>
+
+  <aside class="cart">
+    <div class="cart-head">
+      <h2>ตะกร้า</h2>
+      <button id="clearCart" class="link-btn" type="button">ล้างทั้งหมด</button>
+    </div>
+
+    <ul class="cart-list" id="cartList"></ul>
+    <p class="cart-empty" id="cartEmpty">ยังไม่มีสินค้า — คลิกการ์ดสินค้าเพื่อเพิ่ม</p>
+
+    <div class="totals">
+      <div class="row"><span>จำนวนชิ้น</span><span id="totalQty">0</span></div>
+      <div class="row"><span>ยอดรวม</span><span id="subtotal">฿0</span></div>
+      <div class="row grand"><span>ต้องชำระ</span><span id="grandTotal">฿0</span></div>
+    </div>
+
+    <button id="payBtn" class="pay-btn" type="button" disabled>ชำระเงิน</button>
+  </aside>
+</main>
+
+<!-- ชำระเงิน -->
+<div class="modal" id="payModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="payTitle">
+    <h2 id="payTitle">เลือกวิธีชำระเงิน</h2>
+    <p class="pay-amount">ยอดชำระ <b id="payAmount">฿0</b></p>
+    <div class="pay-methods" id="payMethods">
+      <button class="method" data-method="เงินสด" type="button"><span>💵</span>เงินสด</button>
+      <button class="method" data-method="พร้อมเพย์ / QR" type="button"><span>📱</span>พร้อมเพย์ / QR</button>
+      <button class="method" data-method="บัตรเครดิต" type="button"><span>💳</span>บัตรเครดิต</button>
+    </div>
+    <button class="ghost-btn" id="cancelPay" type="button">ยกเลิก</button>
+  </div>
+</div>
+
+<!-- ใบเสร็จ -->
+<div class="modal" id="receiptModal" hidden>
+  <div class="modal-card receipt" role="dialog" aria-modal="true" aria-labelledby="receiptTitle">
+    <div class="check">✓</div>
+    <h2 id="receiptTitle">ขายสำเร็จ</h2>
+    <p class="receipt-sub" id="receiptSub"></p>
+    <ul class="receipt-list" id="receiptList"></ul>
+    <div class="receipt-total"><span>รวม</span><b id="receiptTotal">฿0</b></div>
+    <p class="clicks-used" id="clicksUsed"></p>
+    <button class="pay-btn" id="newSale" type="button">ขายรายการใหม่</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="store.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

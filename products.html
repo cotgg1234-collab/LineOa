@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>เพิ่มสินค้า — ร้านค้า POS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">📦</span>
+    <div>
+      <h1>จัดการสินค้า</h1>
+      <p class="sub">เพิ่ม / แก้ไข / ลบ รายการสินค้าในร้าน</p>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <a class="nav-link" href="index.html">🛒 หน้าขายสินค้า</a>
+    <a class="nav-link active" href="products.html">📦 เพิ่มสินค้า</a>
+  </nav>
+</header>
+
+<main class="admin">
+  <!-- ฟอร์มเพิ่ม / แก้ไข -->
+  <section class="panel form-panel">
+    <h2 id="formTitle">เพิ่มสินค้าใหม่</h2>
+
+    <form id="productForm" novalidate>
+      <input type="hidden" id="originalSku" />
+
+      <div class="field">
+        <label for="fName">ชื่อสินค้า <span class="req">*</span></label>
+        <input id="fName" type="text" placeholder="เช่น น้ำส้มคั้น 350 มล." required />
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="fPrice">ราคา (บาท) <span class="req">*</span></label>
+          <input id="fPrice" type="number" min="0" step="1" placeholder="25" required />
+        </div>
+        <div class="field">
+          <label for="fSku">รหัสสินค้า</label>
+          <input id="fSku" type="text" placeholder="เว้นว่าง = สร้างให้อัตโนมัติ" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="fCat">หมวดหมู่ <span class="req">*</span></label>
+          <input id="fCat" type="text" list="catList" placeholder="เช่น เครื่องดื่ม" required />
+          <datalist id="catList"></datalist>
+        </div>
+        <div class="field">
+          <label for="fEmoji">ไอคอน (อีโมจิ)</label>
+          <input id="fEmoji" type="text" maxlength="4" placeholder="🥤" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="fKeywords">คำค้นหาเพิ่มเติม</label>
+        <input id="fKeywords" type="text" placeholder="เช่น orange juice น้ำส้ม (คั่นด้วยเว้นวรรค)" />
+      </div>
+
+      <div class="emoji-pick" id="emojiPick" aria-label="เลือกไอคอนอย่างเร็ว"></div>
+
+      <p class="form-error" id="formError" hidden></p>
+
+      <div class="form-actions">
+        <button type="submit" class="pay-btn" id="submitBtn">บันทึกสินค้า</button>
+        <button type="button" class="ghost-btn" id="cancelEdit" hidden>ยกเลิกการแก้ไข</button>
+      </div>
+    </form>
+
+    <div class="preview-box">
+      <p class="preview-label">ตัวอย่างการ์ดในหน้าขาย</p>
+      <div class="card preview-card" id="previewCard">
+        <span class="emoji">📦</span>
+        <span class="name">ชื่อสินค้า</span>
+        <span class="price">฿0</span>
+        <span class="sku">—</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ตารางรายการสินค้า -->
+  <section class="panel list-panel">
+    <div class="list-head">
+      <h2>รายการสินค้า <span class="count" id="count">0</span></h2>
+      <div class="list-tools">
+        <input id="filter" type="search" class="filter-input" placeholder="🔍 กรองรายการ…" autocomplete="off" />
+        <button class="link-btn" id="resetStore" type="button">คืนค่าชุดตัวอย่าง</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ไอคอน</th><th>รหัส</th><th>ชื่อสินค้า</th><th>หมวดหมู่</th><th class="right">ราคา</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <p class="empty" id="listEmpty" hidden>ยังไม่มีสินค้า</p>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="store.js"></script>
+<script src="products.js"></script>
+</body>
+</html>
