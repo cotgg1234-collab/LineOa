@@ -1,9 +1,7 @@
-/* ร้านขายของ — POS ขายจบใน 5 คลิก
- * ขั้นตอนการขาย: คลิกการ์ดสินค้า (1-3 คลิก) -> ชำระเงิน (1 คลิก) -> เลือกวิธีจ่าย (1 คลิก) = จบ
- * ค้นหาแล้วกด Enter = เพิ่มสินค้าอันดับแรกโดยไม่เสียคลิกเลย
+/* ร้านขายของ — ระบบขายหน้าร้าน (POS)
+ * ขั้นตอนการขาย: เลือกสินค้า -> ชำระเงิน -> เลือกวิธีจ่าย -> ใบเสร็จ
+ * ทางลัด: พิมพ์ค้นหาแล้วกด Enter เพื่อเพิ่มสินค้าอันดับแรกทันที
  */
-
-const MAX_CLICKS = 5;
 
 /* ---------- ข้อมูลสินค้า (มาจาก store.js / localStorage) ---------- */
 let PRODUCTS = Store.all();
@@ -12,7 +10,6 @@ let PRODUCTS = Store.all();
 const cart = new Map();     // sku -> { product, qty }
 let activeCat = 'ทั้งหมด';
 let query = '';
-let clicks = 0;
 let visible = [];           // สินค้าที่แสดงอยู่ตอนนี้ (สำหรับกด Enter)
 
 /* ---------- อ้างอิง DOM ---------- */
@@ -23,27 +20,13 @@ const el = {
   cartList: $('cartList'), cartEmpty: $('cartEmpty'),
   totalQty: $('totalQty'), subtotal: $('subtotal'), grandTotal: $('grandTotal'),
   payBtn: $('payBtn'), clearCart: $('clearCart'),
-  clickCount: $('clickCount'), clickMeter: $('clickMeter'),
   payModal: $('payModal'), payAmount: $('payAmount'), payMethods: $('payMethods'), cancelPay: $('cancelPay'),
   receiptModal: $('receiptModal'), receiptSub: $('receiptSub'), receiptList: $('receiptList'),
-  receiptTotal: $('receiptTotal'), clicksUsed: $('clicksUsed'), newSale: $('newSale'),
+  receiptTotal: $('receiptTotal'), newSale: $('newSale'),
   toast: $('toast'),
 };
 
 const baht = (n) => '฿' + n.toLocaleString('th-TH');
-
-/* ---------- ตัวนับคลิก ---------- */
-function countClick() {
-  clicks++;
-  el.clickCount.textContent = clicks;
-  el.clickMeter.classList.toggle('over', clicks > MAX_CLICKS);
-}
-
-function resetClicks() {
-  clicks = 0;
-  el.clickCount.textContent = '0';
-  el.clickMeter.classList.remove('over');
-}
 
 /* ---------- หมวดหมู่ ---------- */
 function renderCategories() {
@@ -88,10 +71,7 @@ function renderGrid() {
       <span class="name">${p.name}</span>
       <span class="price">${baht(p.price)}</span>
       <span class="sku">${p.sku} · ${p.cat}</span>`;
-    card.addEventListener('click', () => {
-      countClick();
-      addToCart(p);
-    });
+    card.addEventListener('click', () => addToCart(p));
     el.grid.appendChild(card);
   }
 }
@@ -164,13 +144,11 @@ function renderCart() {
 
 /* ---------- ชำระเงิน ---------- */
 function openPay() {
-  countClick();
   el.payAmount.textContent = baht(totals().sum);
   el.payModal.hidden = false;
 }
 
 function finishSale(method) {
-  countClick();
   const { qty, sum } = totals();
   const now = new Date();
 
@@ -185,9 +163,6 @@ function finishSale(method) {
     el.receiptList.appendChild(li);
   }
   el.receiptTotal.textContent = baht(sum);
-  el.clicksUsed.textContent = clicks <= MAX_CLICKS
-    ? `ใช้ไป ${clicks} คลิก (ไม่เกิน ${MAX_CLICKS} คลิก ✔)`
-    : `ใช้ไป ${clicks} คลิก (เกินเป้า ${MAX_CLICKS} คลิก)`;
 
   el.payModal.hidden = true;
   el.receiptModal.hidden = false;
@@ -199,7 +174,6 @@ function startNewSale() {
   el.search.value = '';
   el.clearSearch.hidden = true;
   el.receiptModal.hidden = true;
-  resetClicks();
   renderCart();
   renderGrid();
   el.search.focus();
@@ -223,7 +197,7 @@ el.search.addEventListener('input', () => {
 
 el.search.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && visible.length > 0) {
-    // ทางลัด: ค้นหาแล้วกด Enter เพิ่มสินค้าอันดับแรก โดยไม่นับเป็นคลิก
+    // ทางลัด: ค้นหาแล้วกด Enter เพิ่มสินค้าอันดับแรกทันที
     addToCart(visible[0]);
     el.search.select();
   }
@@ -245,7 +219,6 @@ el.clearSearch.addEventListener('click', () => {
 
 el.clearCart.addEventListener('click', () => {
   cart.clear();
-  resetClicks();
   renderCart();
   renderGrid();
 });

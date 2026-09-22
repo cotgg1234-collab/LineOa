@@ -88,20 +88,6 @@ body {
 }
 .clear-btn:hover { background: #d7dde5; }
 
-.click-meter {
-  flex: 0 0 auto;
-  text-align: center;
-  padding: 8px 16px;
-  border-radius: 12px;
-  background: #eefaf2;
-  border: 1px solid #cdeeda;
-  min-width: 92px;
-}
-.click-meter.over { background: #fdecec; border-color: #f7c5c6; }
-.click-count { font-size: 20px; font-weight: 700; color: var(--brand-dark); }
-.click-meter.over .click-count { color: var(--danger); }
-.click-label { display: block; font-size: 11px; color: var(--muted); }
-
 /* ---------- เลย์เอาต์ ---------- */
 .layout {
   flex: 1 1 auto;
@@ -373,7 +359,6 @@ body {
 }
 .receipt-list li { display: flex; justify-content: space-between; padding: 3px 0; }
 .receipt-total { display: flex; justify-content: space-between; font-size: 19px; }
-.clicks-used { font-size: 13px; color: var(--muted); margin: 14px 0 0; }
 
 /* ---------- Toast ---------- */
 .toast {
