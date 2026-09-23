@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ยอดขาย — ร้านค้า POS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css?v=3" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">📊</span>
+    <div>
+      <h1>ยอดขาย</h1>
+      <p class="sub">สรุปการขายตามรอบ 14 วัน</p>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <a class="nav-link" href="index.html">🛒 ขาย</a>
+    <a class="nav-link" href="cycle.html">🔄 รอบสั่งของ</a>
+    <a class="nav-link active" href="sales.html">📊 ยอดขาย</a>
+    <a class="nav-link" href="products.html">📦 สินค้า</a>
+  </nav>
+</header>
+
+<main class="report">
+  <!-- ตัวเลขสรุป -->
+  <section class="stats" id="stats"></section>
+
+  <!-- กราฟรายวัน -->
+  <section class="panel chart-panel">
+    <div class="list-head">
+      <h2>ยอดขายรายวัน <span class="count" id="chartRange">14 วันล่าสุด</span></h2>
+      <div class="list-tools">
+        <div class="seg" id="rangePick" role="group" aria-label="ช่วงเวลา">
+          <button class="seg-btn active" data-days="14" type="button">รอบนี้ (14 วัน)</button>
+          <button class="seg-btn" data-days="7" type="button">7 วัน</button>
+          <button class="seg-btn" data-days="30" type="button">30 วัน</button>
+        </div>
+      </div>
+    </div>
+
+    <figure class="chart" id="chart">
+      <div class="bars" id="bars"></div>
+      <figcaption class="chart-note" id="chartNote"></figcaption>
+    </figure>
+  </section>
+
+  <div class="report-cols">
+    <!-- สินค้าขายดี -->
+    <section class="panel">
+      <div class="list-head"><h2>สินค้าขายดี</h2></div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr><th>สินค้า</th><th class="right">จำนวน</th><th class="right">ยอดขาย</th><th class="bar-col"></th></tr>
+          </thead>
+          <tbody id="topBody"></tbody>
+        </table>
+        <p class="empty" id="topEmpty" hidden>ยังไม่มีการขายในช่วงนี้</p>
+      </div>
+    </section>
+
+    <!-- บิลล่าสุด -->
+    <section class="panel">
+      <div class="list-head">
+        <h2>บิลล่าสุด</h2>
+        <div class="list-tools">
+          <button class="mini-btn" id="exportCsv" type="button">⬇ ส่งออก CSV</button>
+          <button class="mini-btn danger" id="undoBill" type="button">ยกเลิกบิลล่าสุด</button>
+        </div>
+      </div>
+      <ul class="bill-list" id="billList"></ul>
+      <p class="empty" id="billEmpty" hidden>ยังไม่มีบิลในช่วงนี้ — ขายสินค้าแล้วยอดจะมาแสดงที่นี่</p>
+    </section>
+  </div>
+
+  <p class="footnote">ข้อมูลถูกเก็บในเครื่องนี้เท่านั้น (localStorage) — ขายจากอีกเครื่องจะไม่เห็นยอดรวมกัน กดส่งออก CSV เพื่อสำรองข้อมูลไว้เป็นระยะ</p>
+</main>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="store.js?v=3"></script>
+<script src="sales.js?v=3"></script>
+</body>
+</html>

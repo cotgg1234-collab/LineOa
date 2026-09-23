@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="styles.css?v=3" />
 </head>
 <body>
 <header class="topbar">
@@ -20,8 +20,10 @@
   </div>
 
   <nav class="nav">
-    <a class="nav-link" href="index.html">🛒 หน้าขายสินค้า</a>
-    <a class="nav-link active" href="products.html">📦 เพิ่มสินค้า</a>
+    <a class="nav-link" href="index.html">🛒 ขาย</a>
+    <a class="nav-link" href="cycle.html">🔄 รอบสั่งของ</a>
+    <a class="nav-link" href="sales.html">📊 ยอดขาย</a>
+    <a class="nav-link active" href="products.html">📦 สินค้า</a>
   </nav>
 </header>
 
@@ -61,6 +63,18 @@
         </div>
       </div>
 
+      <div class="field-row">
+        <div class="field">
+          <label for="fStock">จำนวนคงเหลือ</label>
+          <input id="fStock" type="number" step="1" placeholder="0" />
+        </div>
+        <div class="field">
+          <label for="fReorder">จุดสั่งซื้อ</label>
+          <input id="fReorder" type="number" min="0" step="1" placeholder="3" />
+          <span class="hint">เหลือเท่านี้หรือน้อยกว่า = ใกล้หมด</span>
+        </div>
+      </div>
+
       <div class="field">
         <label for="fKeywords">คำค้นหาเพิ่มเติม</label>
         <input id="fKeywords" type="text" placeholder="เช่น orange juice น้ำส้ม (คั่นด้วยเว้นวรรค)" />
@@ -93,6 +107,7 @@
       <h2>รายการสินค้า <span class="count" id="count">0</span></h2>
       <div class="list-tools">
         <input id="filter" type="search" class="filter-input" placeholder="🔍 กรองรายการ…" autocomplete="off" />
+        <button class="mini-btn" id="lowOnly" type="button" aria-pressed="false">🔔 เฉพาะใกล้หมด</button>
         <button class="link-btn" id="resetStore" type="button">คืนค่าชุดตัวอย่าง</button>
       </div>
     </div>
@@ -101,7 +116,7 @@
       <table class="table">
         <thead>
           <tr>
-            <th>ไอคอน</th><th>รหัส</th><th>ชื่อสินค้า</th><th>หมวดหมู่</th><th class="right">ราคา</th><th></th>
+            <th>ไอคอน</th><th>รหัส</th><th>ชื่อสินค้า</th><th>หมวดหมู่</th><th class="right">ราคา</th><th class="right">คงเหลือ</th><th></th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -113,7 +128,7 @@
 
 <div class="toast" id="toast" hidden></div>
 
-<script src="store.js"></script>
-<script src="products.js"></script>
+<script src="store.js?v=3"></script>
+<script src="products.js?v=3"></script>
 </body>
 </html>

@@ -29,6 +29,12 @@ const el = {
 
 const baht = (n) => '฿' + n.toLocaleString('th-TH');
 
+/** ระดับสต็อก: out = หมด, low = ใกล้หมด, ok = ปกติ */
+function stockLevel(p) {
+  if (p.stock <= 0) return 'out';
+  return p.stock <= p.reorder ? 'low' : 'ok';
+}
+
 /* ---------- หมวดหมู่ ---------- */
 function renderCategories() {
   const cats = ['ทั้งหมด', ...new Set(PRODUCTS.map((p) => p.cat))];
@@ -71,7 +77,8 @@ function renderGrid() {
       <span class="emoji">${p.emoji}</span>
       <span class="name">${p.name}</span>
       <span class="price">${baht(p.price)}</span>
-      <span class="sku">${p.sku} · ${p.cat}</span>`;
+      <span class="sku">${p.sku} · ${p.cat}</span>
+      <span class="stock-tag ${stockLevel(p)}">${p.stock <= 0 ? 'หมด' : `เหลือ ${p.stock}`}</span>`;
     card.addEventListener('click', () => addToCart(p));
     el.grid.appendChild(card);
   }
@@ -93,7 +100,11 @@ function addToCart(p, qty = 1) {
   renderCart();
   renderGrid();
   flashCard(p.sku);
-  toast(`เพิ่ม ${p.name}`);
+
+  // ขายได้ แต่เตือนให้รู้ว่าจำนวนในตะกร้าเกินที่บันทึกไว้
+  const inCart = cart.get(p.sku).qty;
+  if (inCart > p.stock) toast(`⚠️ ${p.name} — สต็อกมี ${p.stock}, ในตะกร้า ${inCart}`);
+  else toast(`เพิ่ม ${p.name}`);
 }
 
 function setQty(sku, qty) {
@@ -165,6 +176,19 @@ function finishSale(method) {
     el.receiptList.appendChild(li);
   }
   el.receiptTotal.textContent = baht(sum);
+
+  // บันทึกบิล (เก็บชื่อ+ราคา ณ ตอนขาย เพื่อให้ยอดย้อนหลังไม่เพี้ยนเมื่อแก้ราคาทีหลัง)
+  Sales.add({
+    method,
+    total: sum,
+    items: [...cart.values()].map(({ product: p, qty: q }) => ({
+      sku: p.sku, name: p.name, price: p.price, qty: q,
+    })),
+  });
+
+  // ตัดสต็อกตามจำนวนที่ขายจริง แล้วโหลดรายการใหม่
+  Store.deductMany([...cart.values()].map(({ product, qty: q }) => ({ sku: product.sku, qty: q })));
+  PRODUCTS = Store.all();
 
   el.payModal.hidden = true;
   el.receiptModal.hidden = false;

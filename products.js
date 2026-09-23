@@ -6,6 +6,7 @@ const el = {
   originalSku: $('originalSku'),
   name: $('fName'), price: $('fPrice'), sku: $('fSku'),
   cat: $('fCat'), emoji: $('fEmoji'), keywords: $('fKeywords'),
+  stock: $('fStock'), reorder: $('fReorder'), lowOnly: $('lowOnly'),
   catList: $('catList'), emojiPick: $('emojiPick'),
   submitBtn: $('submitBtn'), cancelEdit: $('cancelEdit'),
   previewCard: $('previewCard'),
@@ -17,6 +18,14 @@ const el = {
 const EMOJIS = ['📦','🍚','🍜','🥚','🥛','💧','🥤','☕','🍞','🥐','🥔','🍫','🍨','🍌','🍎','🍗','🍱','🍢','🧼','🪥','🧻','🔋','🛢️','🧴','🍬','🧃','🥫','🍖'];
 
 const baht = (n) => '฿' + Number(n || 0).toLocaleString('th-TH');
+
+let lowOnly = false;   // กรองเฉพาะสินค้าที่ถึงจุดสั่งซื้อ
+
+/** ระดับสต็อก: out = หมด, low = ใกล้หมด, ok = ปกติ */
+function stockLevel(p) {
+  if (p.stock <= 0) return 'out';
+  return p.stock <= p.reorder ? 'low' : 'ok';
+}
 
 /* ---------- Toast ---------- */
 let toastTimer;
@@ -68,10 +77,14 @@ function renderCatList() {
 /* ---------- ตารางรายการ ---------- */
 function renderTable() {
   const q = el.filter.value.trim().toLowerCase();
-  const list = Store.all().filter((p) =>
-    !q || (p.name + ' ' + p.sku + ' ' + p.cat).toLowerCase().includes(q));
+  const list = Store.all()
+    .filter((p) => !q || (p.name + ' ' + p.sku + ' ' + p.cat).toLowerCase().includes(q))
+    .filter((p) => !lowOnly || stockLevel(p) !== 'ok');
 
-  el.count.textContent = `${list.length} รายการ`;
+  const lowCount = Store.lowStock().length;
+  el.count.textContent = `${list.length} รายการ` + (lowCount ? ` · ใกล้หมด ${lowCount}` : '');
+  el.lowOnly.classList.toggle('active', lowOnly);
+  el.lowOnly.setAttribute('aria-pressed', String(lowOnly));
   el.tbody.innerHTML = '';
   el.listEmpty.hidden = list.length > 0;
 
@@ -84,9 +97,24 @@ function renderTable() {
       <td><span class="tag">${p.cat}</span></td>
       <td class="right td-price">${baht(p.price)}</td>
       <td class="right nowrap">
+        <span class="stock-cell">
+          <button class="step-btn" data-act="minus" type="button" title="ลดสต็อก 1">−</button>
+          <span class="stock-num ${stockLevel(p)}">${p.stock}</span>
+          <button class="step-btn" data-act="plus" type="button" title="เพิ่มสต็อก 1">+</button>
+        </span>
+      </td>
+      <td class="right nowrap">
         <button class="mini-btn" data-act="edit" type="button">แก้ไข</button>
         <button class="mini-btn danger" data-act="del" type="button">ลบ</button>
       </td>`;
+    tr.querySelector('[data-act="minus"]').addEventListener('click', () => {
+      Store.adjustStock(p.sku, -1);
+      refreshAll();
+    });
+    tr.querySelector('[data-act="plus"]').addEventListener('click', () => {
+      Store.adjustStock(p.sku, 1);
+      refreshAll();
+    });
     tr.querySelector('[data-act="edit"]').addEventListener('click', () => startEdit(p));
     tr.querySelector('[data-act="del"]').addEventListener('click', () => {
       if (!confirm(`ลบ "${p.name}" ออกจากรายการสินค้า?`)) return;
@@ -118,6 +146,8 @@ function resetForm() {
   el.submitBtn.textContent = 'บันทึกสินค้า';
   el.cancelEdit.hidden = true;
   el.sku.placeholder = `เว้นว่าง = ${Store.nextSku()}`;
+  el.stock.value = '';
+  el.reorder.value = '';
   showError('');
   renderPreview();
 }
@@ -130,6 +160,8 @@ function startEdit(p) {
   el.cat.value = p.cat;
   el.emoji.value = p.emoji || '';
   el.keywords.value = p.keywords || '';
+  el.stock.value = p.stock;
+  el.reorder.value = p.reorder;
   el.formTitle.textContent = `แก้ไข: ${p.name}`;
   el.submitBtn.textContent = 'บันทึกการแก้ไข';
   el.cancelEdit.hidden = false;
@@ -151,6 +183,12 @@ el.form.addEventListener('submit', (e) => {
     return showError('กรุณากรอกราคาเป็นตัวเลขไม่ติดลบ');
   }
   if (!cat) return showError('กรุณากรอกหมวดหมู่');
+  if (el.stock.value.trim() !== '' && isNaN(Number(el.stock.value))) {
+    return showError('จำนวนคงเหลือต้องเป็นตัวเลข');
+  }
+  if (el.reorder.value.trim() !== '' && (isNaN(Number(el.reorder.value)) || Number(el.reorder.value) < 0)) {
+    return showError('จุดสั่งซื้อต้องเป็นตัวเลขไม่ติดลบ');
+  }
 
   const product = {
     sku: el.sku.value.trim() || Store.nextSku(),
@@ -159,6 +197,9 @@ el.form.addEventListener('submit', (e) => {
     cat,
     emoji: el.emoji.value.trim() || '📦',
     keywords: el.keywords.value.trim(),
+    stock: el.stock.value.trim() === '' ? 0 : Number(el.stock.value),
+    reorder: el.reorder.value.trim() === '' ? 3 : Number(el.reorder.value),
+    cost: (el.originalSku.value && Store.find(el.originalSku.value)?.cost) || 0,
   };
 
   const editing = el.originalSku.value;
@@ -181,6 +222,11 @@ el.resetStore.addEventListener('click', () => {
 });
 
 el.filter.addEventListener('input', renderTable);
+
+el.lowOnly.addEventListener('click', () => {
+  lowOnly = !lowOnly;
+  renderTable();
+});
 
 for (const input of [el.name, el.price, el.sku, el.cat, el.emoji]) {
   input.addEventListener('input', renderPreview);

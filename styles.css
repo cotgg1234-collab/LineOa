@@ -187,6 +187,19 @@ body {
   100% { box-shadow: 0 0 0 14px rgba(6,199,85,0); }
 }
 
+/* ป้ายสต็อกบนการ์ดสินค้า */
+.stock-tag {
+  margin-top: 2px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: #eef2f6;
+  color: var(--muted);
+}
+.stock-tag.low { background: #fff3e6; color: #c05600; }
+.stock-tag.out { background: #fdecec; color: var(--danger); }
+
 .empty { text-align: center; color: var(--muted); padding: 40px 0; }
 
 /* ---------- ตะกร้า ---------- */
@@ -534,6 +547,38 @@ body {
 }
 .mini-btn:hover { border-color: var(--brand); color: var(--brand-dark); }
 .mini-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+.mini-btn.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+/* ช่องปรับสต็อกในตาราง */
+.stock-cell { display: inline-flex; align-items: center; gap: 8px; }
+
+.step-btn {
+  width: 26px; height: 26px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--ink);
+  cursor: pointer;
+}
+.step-btn:hover { border-color: var(--brand); color: var(--brand-dark); }
+
+.stock-num {
+  min-width: 26px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 15px;
+}
+.stock-num.low { color: #c05600; }
+.stock-num.out { color: var(--danger); }
+
+.hint { font-size: 11px; color: var(--muted); }
 
 /* ---------- จอเล็ก ---------- */
 @media (max-width: 1100px) {
@@ -640,4 +685,249 @@ body {
 @media (max-width: 560px) {
   .field-row { grid-template-columns: 1fr; }
   .card .sku { display: none; }
+}
+
+/* =========================================================================
+ * หน้ายอดขาย (sales.html) และหน้ารอบสั่งของ (cycle.html)
+ * ========================================================================= */
+
+.report {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 22px 28px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.report-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.footnote {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  margin: 0;
+}
+
+/* ---------- ตัวเลขสรุป ---------- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.stat {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+}
+.stat.accent { border-color: var(--brand); background: #f3fdf7; }
+
+.stat-label { margin: 0; font-size: 13px; color: var(--muted); }
+.stat-value { margin: 4px 0 2px; font-size: 26px; font-weight: 700; line-height: 1.1; }
+.stat-sub { margin: 0; font-size: 12px; color: var(--muted); }
+
+/* ---------- ตัวเลือกช่วงเวลา ---------- */
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.seg-btn {
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 14px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: #fff;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.seg-btn:last-child { border-right: 0; }
+.seg-btn:hover { color: var(--brand-dark); }
+.seg-btn.active { background: var(--brand); color: #fff; font-weight: 500; }
+
+/* ---------- กราฟแท่ง ---------- */
+.chart { margin: 0; }
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 200px;
+  padding-top: 18px;
+}
+
+.bars .bar-col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  min-width: 0;
+}
+
+.bar-value {
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .12s;
+}
+.bars .bar-col:hover .bar-value,
+.bars .bar-col.today .bar-value { opacity: 1; }
+
+.bar-track {
+  flex: 1 1 auto;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--line);
+}
+
+.bar-fill {
+  width: 100%;
+  background: #9ad9b4;
+  border-radius: 4px 4px 0 0;
+  transition: background .12s;
+}
+.bars .bar-col:hover .bar-fill { background: var(--brand-dark); }
+.bars .bar-col.today .bar-fill { background: var(--brand); }
+
+.bar-label { font-size: 11px; color: var(--muted); }
+.bars .bar-col.today .bar-label { color: var(--ink); font-weight: 700; }
+
+.chart-note {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* แถบเล็กในตารางสินค้าขายดี */
+.table .bar-col { width: 110px; }
+.mini-bar {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: #9ad9b4;
+  min-width: 4px;
+}
+
+/* ---------- รายการบิล / ประวัติรอบ ---------- */
+.bill-list { list-style: none; margin: 0; padding: 0; }
+
+.bill { border-bottom: 1px solid var(--line); }
+.bill:last-child { border-bottom: 0; }
+
+.bill summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 4px;
+  cursor: pointer;
+  font-size: 14px;
+  list-style: none;
+}
+.bill summary::-webkit-details-marker { display: none; }
+.bill summary::before {
+  content: '▸';
+  color: var(--muted);
+  font-size: 12px;
+  transition: transform .12s;
+}
+.bill details[open] summary::before { transform: rotate(90deg); }
+
+.bill-time { font-weight: 500; }
+.bill-meta { color: var(--muted); font-size: 13px; }
+.bill-total { margin-left: auto; font-weight: 700; }
+
+.bill-items {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0 4px 0 22px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.bill-items li { display: flex; justify-content: space-between; padding: 3px 0; }
+
+/* ---------- แถบสถานะรอบ ---------- */
+.cycle-head { text-align: center; }
+.cycle-state { margin: 0; font-size: 14px; color: var(--muted); }
+.cycle-big { margin: 6px 0 4px; font-size: 30px; font-weight: 700; line-height: 1.15; }
+.cycle-big.due { color: var(--danger); }
+.cycle-sub { margin: 0; font-size: 13px; color: var(--muted); }
+
+.cycle-bar {
+  margin: 14px auto 0;
+  max-width: 520px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+.cycle-bar span {
+  display: block;
+  height: 100%;
+  background: var(--brand);
+  border-radius: 999px;
+}
+
+/* ---------- ใบสั่งของ ---------- */
+.basis-note {
+  margin: -6px 0 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f4f7fa;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.order-table td { vertical-align: middle; }
+.order-table .out { color: var(--danger); font-weight: 700; }
+
+.qty-input {
+  width: 62px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  padding: 6px 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fafbfc;
+}
+.qty-input:focus { border-color: var(--brand); background: #fff; outline: none; }
+
+.order-actions { margin-top: 16px; }
+.order-total { text-align: center; font-size: 15px; color: var(--muted); margin: 0 0 10px; }
+.order-total b { color: var(--ink); font-size: 17px; }
+.hint.center { text-align: center; display: block; margin-top: 8px; }
+
+/* ---------- จอเล็ก ---------- */
+@media (max-width: 900px) {
+  .report { padding: 12px 14px 24px; gap: 12px; }
+  .report-cols { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat { padding: 12px 14px; }
+  .stat-value { font-size: 21px; }
+  .bars { height: 150px; }
+  .bar-label { font-size: 9px; }
+  .bar-value { display: none; }
+  .cycle-big { font-size: 24px; }
+  .table .bar-col { display: none; }
+  .table th, .table td { padding: 8px 6px; font-size: 13px; }
+  .qty-input { width: 50px; }
 }
