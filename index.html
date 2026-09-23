@@ -38,7 +38,13 @@
     <p class="empty" id="empty" hidden>ไม่พบสินค้าที่ตรงกับคำค้นหา</p>
   </section>
 
-  <aside class="cart">
+  <aside class="cart" id="cart">
+    <!-- ที่จับสำหรับเปิด/ปิดตะกร้าบนมือถือ (ซ่อนบนจอใหญ่) -->
+    <button class="sheet-handle" id="toggleCart" type="button" aria-expanded="false" aria-controls="cartList">
+      <span class="handle-bar"></span>
+      <span class="handle-text">ดูรายการในตะกร้า · <b id="handleCount">0</b> ชิ้น</span>
+    </button>
+
     <div class="cart-head">
       <h2>ตะกร้า</h2>
       <button id="clearCart" class="link-btn" type="button">ล้างทั้งหมด</button>
@@ -65,7 +71,6 @@
     <div class="pay-methods" id="payMethods">
       <button class="method" data-method="เงินสด" type="button"><span>💵</span>เงินสด</button>
       <button class="method" data-method="พร้อมเพย์ / QR" type="button"><span>📱</span>พร้อมเพย์ / QR</button>
-      <button class="method" data-method="บัตรเครดิต" type="button"><span>💳</span>บัตรเครดิต</button>
     </div>
     <button class="ghost-btn" id="cancelPay" type="button">ยกเลิก</button>
   </div>

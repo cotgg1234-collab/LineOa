@@ -540,16 +540,101 @@ body {
   .admin { grid-template-columns: 1fr; }
 }
 
+/* ที่จับตะกร้า — ใช้เฉพาะมือถือ */
+.sheet-handle { display: none; }
+
 @media (max-width: 900px) {
-  .layout { grid-template-columns: 1fr; }
-  .topbar { flex-wrap: wrap; }
+  /* ให้ทั้งหน้าเลื่อนเป็นก้อนเดียว ไม่ซ้อนกล่องเลื่อนในกล่องเลื่อน */
+  html, body { height: auto; }
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 12px 14px 150px;   /* เว้นที่ให้แถบตะกร้าด้านล่าง */
+    gap: 12px;
+  }
+  .catalog { min-height: 0; }
+  .grid { overflow: visible; }
+
+  /* แถบบน: บีบให้เตี้ย และตรึงช่องค้นหาไว้ด้านบน */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+  .logo { font-size: 26px; }
+  .brand h1 { font-size: 16px; }
+  .sub { display: none; }
   .search-wrap { order: 3; flex-basis: 100%; max-width: none; }
-  .cart { max-height: 60vh; }
+  #search { font-size: 16px; padding: 11px 40px 11px 42px; }
+  .nav { margin-left: auto; }
+  .nav-link { padding: 8px 12px; font-size: 13px; }
+
+  /* หมวดหมู่: เลื่อนแนวนอนบรรทัดเดียว แทนการขึ้นบรรทัดใหม่ */
+  .chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin: 0 -14px 12px;
+    padding: 0 14px;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: 0 0 auto; }
+
+  /* การ์ด 3 ชิ้นต่อแถวเหมือนเดิม แต่กระชับขึ้น */
   .grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .card { padding: 14px 8px 12px; }
-  .card .emoji { font-size: 36px; }
-  .card .name { font-size: 13px; }
-  .card .price { font-size: 16px; }
+  .card { padding: 12px 6px 10px; gap: 5px; }
+  .card .emoji { font-size: 32px; }
+  .card .name { font-size: 12px; line-height: 1.35; }
+  .card .price { font-size: 15px; }
+  .card .sku { font-size: 10px; }
+  .card:hover { transform: none; box-shadow: var(--shadow); border-color: var(--line); }
+
+  /* ตะกร้า = แผ่นเลื่อนขึ้นจากขอบล่าง */
+  .cart {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 40;
+    max-height: 85vh;
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 20px 20px 0 0;
+    padding: 6px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -6px 24px rgba(18, 32, 48, .14);
+  }
+
+  .sheet-handle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 6px 0 10px;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .handle-bar {
+    width: 44px; height: 4px;
+    border-radius: 999px;
+    background: #d7dde5;
+  }
+  .handle-text b { color: var(--ink); }
+
+  /* ตอนหุบ: โชว์แค่ยอดรวมกับปุ่มชำระเงิน */
+  body:not(.cart-open) .cart .cart-head,
+  body:not(.cart-open) .cart .cart-list,
+  body:not(.cart-open) .cart .cart-empty,
+  body:not(.cart-open) .cart .totals .row:not(.grand) { display: none; }
+
+  body:not(.cart-open) .cart .totals { border-top: 0; margin-top: 0; padding-top: 0; }
+  .cart .totals .grand { padding-top: 0; }
+  .cart-list { max-height: 44vh; }
+  .pay-btn { margin-top: 10px; padding: 15px; }
 }
 
 @media (max-width: 560px) {

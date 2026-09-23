@@ -20,6 +20,7 @@ const el = {
   cartList: $('cartList'), cartEmpty: $('cartEmpty'),
   totalQty: $('totalQty'), subtotal: $('subtotal'), grandTotal: $('grandTotal'),
   payBtn: $('payBtn'), clearCart: $('clearCart'),
+  cart: $('cart'), toggleCart: $('toggleCart'), handleCount: $('handleCount'),
   payModal: $('payModal'), payAmount: $('payAmount'), payMethods: $('payMethods'), cancelPay: $('cancelPay'),
   receiptModal: $('receiptModal'), receiptSub: $('receiptSub'), receiptList: $('receiptList'),
   receiptTotal: $('receiptTotal'), newSale: $('newSale'),
@@ -138,6 +139,7 @@ function renderCart() {
   el.totalQty.textContent = qty;
   el.subtotal.textContent = baht(sum);
   el.grandTotal.textContent = baht(sum);
+  el.handleCount.textContent = qty;
   el.payBtn.disabled = cart.size === 0;
   el.payBtn.textContent = cart.size === 0 ? 'ชำระเงิน' : `ชำระเงิน ${baht(sum)}`;
 }
@@ -170,6 +172,7 @@ function finishSale(method) {
 
 function startNewSale() {
   cart.clear();
+  collapseCart();
   query = '';
   el.search.value = '';
   el.clearSearch.hidden = true;
@@ -222,6 +225,17 @@ el.clearCart.addEventListener('click', () => {
   renderCart();
   renderGrid();
 });
+
+// มือถือ: กดที่จับเพื่อกาง/หุบรายการในตะกร้า
+el.toggleCart.addEventListener('click', () => {
+  const open = document.body.classList.toggle('cart-open');
+  el.toggleCart.setAttribute('aria-expanded', String(open));
+});
+
+function collapseCart() {
+  document.body.classList.remove('cart-open');
+  el.toggleCart.setAttribute('aria-expanded', 'false');
+}
 
 el.payBtn.addEventListener('click', openPay);
 el.cancelPay.addEventListener('click', () => { el.payModal.hidden = true; });
