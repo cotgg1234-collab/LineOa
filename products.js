@@ -11,7 +11,7 @@ const el = {
   submitBtn: $('submitBtn'), cancelEdit: $('cancelEdit'),
   previewCard: $('previewCard'),
   tbody: $('tbody'), listEmpty: $('listEmpty'), count: $('count'),
-  filter: $('filter'), resetStore: $('resetStore'),
+  filter: $('filter'), resetStore: $('resetStore'), fillStock: $('fillStock'),
   toast: $('toast'),
 };
 
@@ -219,6 +219,23 @@ el.resetStore.addEventListener('click', () => {
   resetForm();
   refreshAll();
   toast('คืนค่าชุดตัวอย่างแล้ว');
+});
+
+// ตั้งสต็อกให้สินค้าที่ยังเป็น 0 ทั้งหมดในครั้งเดียว (ใช้ตอนเริ่มใช้ระบบ)
+el.fillStock.addEventListener('click', () => {
+  const zero = Store.all().filter((p) => p.stock <= 0);
+  if (!zero.length) return toast('ไม่มีสินค้าที่สต็อกเป็น 0');
+
+  const input = prompt(`ตั้งจำนวนคงเหลือให้สินค้าที่ยังเป็น 0 จำนวน ${zero.length} รายการ
+ใส่จำนวน:`, '10');
+  if (input === null) return;
+  const qty = Number(input);
+  if (!Number.isFinite(qty) || qty < 0) return toast('กรุณาใส่ตัวเลขไม่ติดลบ');
+
+  const list = Store.all().map((p) => (p.stock <= 0 ? { ...p, stock: qty } : p));
+  Store.saveAll(list);
+  refreshAll();
+  toast(`ตั้งสต็อก ${zero.length} รายการเป็น ${qty} แล้ว`);
 });
 
 el.filter.addEventListener('input', renderTable);

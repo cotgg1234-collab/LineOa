@@ -70,8 +70,9 @@ function renderGrid() {
     const inCart = cart.get(p.sku);
     const card = document.createElement('button');
     card.type = 'button';
-    card.className = 'card';
+    card.className = 'card' + (p.stock <= 0 ? ' sold-out' : '');
     card.dataset.sku = p.sku;
+    card.disabled = p.stock <= 0;
     card.innerHTML = `
       ${inCart ? `<span class="badge">${inCart.qty}</span>` : ''}
       <span class="emoji">${p.emoji}</span>
@@ -94,22 +95,40 @@ function flashCard(sku) {
 
 /* ---------- ตะกร้า ---------- */
 function addToCart(p, qty = 1) {
+  if (p.stock <= 0) {
+    toast(`${p.name} หมดแล้ว — เติมสต็อกในหน้าสินค้าก่อน`);
+    return;
+  }
+
   const line = cart.get(p.sku);
+  const already = line ? line.qty : 0;
+  if (already + qty > p.stock) {
+    toast(`${p.name} เหลือ ${p.stock} ชิ้น — หยิบได้ไม่เกินนี้`);
+    if (already >= p.stock) return;
+    qty = p.stock - already;
+  }
+
   if (line) line.qty += qty;
   else cart.set(p.sku, { product: p, qty });
   renderCart();
   renderGrid();
   flashCard(p.sku);
-
-  // ขายได้ แต่เตือนให้รู้ว่าจำนวนในตะกร้าเกินที่บันทึกไว้
-  const inCart = cart.get(p.sku).qty;
-  if (inCart > p.stock) toast(`⚠️ ${p.name} — สต็อกมี ${p.stock}, ในตะกร้า ${inCart}`);
-  else toast(`เพิ่ม ${p.name}`);
+  toast(`เพิ่ม ${p.name}`);
 }
 
 function setQty(sku, qty) {
-  if (qty <= 0) cart.delete(sku);
-  else cart.get(sku).qty = qty;
+  if (qty <= 0) {
+    cart.delete(sku);
+  } else {
+    const line = cart.get(sku);
+    const stock = Store.find(sku)?.stock ?? 0;
+    if (qty > stock) {
+      toast(`${line.product.name} เหลือ ${stock} ชิ้น`);
+      qty = Math.max(0, stock);
+      if (qty === 0) { cart.delete(sku); renderCart(); renderGrid(); return; }
+    }
+    line.qty = qty;
+  }
   renderCart();
   renderGrid();
 }
@@ -151,8 +170,14 @@ function renderCart() {
   el.subtotal.textContent = baht(sum);
   el.grandTotal.textContent = baht(sum);
   el.handleCount.textContent = qty;
-  el.payBtn.disabled = cart.size === 0;
-  el.payBtn.textContent = cart.size === 0 ? 'ชำระเงิน' : `ชำระเงิน ${baht(sum)}`;
+  // ห้ามชำระเงินถ้ามีรายการที่เกินสต็อก (เช่น ของถูกแก้จากหน้าสินค้าระหว่างขาย)
+  const overStock = [...cart.values()].filter(({ product: p, qty: q }) => q > (Store.find(p.sku)?.stock ?? 0));
+  el.payBtn.disabled = cart.size === 0 || overStock.length > 0;
+  el.payBtn.textContent = cart.size === 0
+    ? 'ชำระเงิน'
+    : overStock.length
+      ? `สต็อกไม่พอ: ${overStock[0].product.name}`
+      : `ชำระเงิน ${baht(sum)}`;
 }
 
 /* ---------- ชำระเงิน ---------- */

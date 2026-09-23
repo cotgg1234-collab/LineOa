@@ -20,6 +20,8 @@
 html, body {
   height: 100%;
   margin: 0;
+  max-width: 100%;
+  overflow-x: hidden;   /* กัน layout ล้มบนมือถือ (iOS จะขยาย viewport ถ้ามีอะไรล้น) */
 }
 
 body {
@@ -41,7 +43,8 @@ body {
   box-shadow: var(--shadow);
 }
 
-.brand { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
+.brand { display: flex; align-items: center; gap: 12px; flex: 0 1 auto; min-width: 0; }
+.brand h1, .brand .sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .logo { font-size: 34px; }
 .brand h1 { margin: 0; font-size: 20px; }
 .sub { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
@@ -49,6 +52,7 @@ body {
 .search-wrap {
   position: relative;
   flex: 1 1 auto;
+  min-width: 0;
   max-width: 720px;
 }
 
@@ -98,7 +102,10 @@ body {
   min-height: 0;
 }
 
-.catalog { display: flex; flex-direction: column; min-height: 0; }
+/* grid item ปล่อยให้ย่อได้ ไม่งั้นเนื้อหาข้างในดันหน้าให้กว้างเกินจอ */
+.layout > * { min-width: 0; }
+
+.catalog { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 
 /* ---------- หมวดหมู่ ---------- */
 .chips {
@@ -131,7 +138,7 @@ body {
   flex: 1 1 auto;
   overflow-y: auto;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);   /* 3 ชิ้นต่อแถวเสมอ */
+  grid-template-columns: repeat(3, minmax(0, 1fr));   /* 3 ชิ้นต่อแถวเสมอ (minmax(0,..) ให้ย่อได้จริง) */
   gap: 14px;
   align-content: start;
   padding-bottom: 8px;
@@ -163,7 +170,7 @@ body {
 .card:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
 
 .card .emoji { font-size: 48px; line-height: 1; }
-.card .name { font-size: 15px; font-weight: 500; }
+.card .name { font-size: 15px; font-weight: 500; overflow-wrap: anywhere; }
 .card .price { font-size: 19px; font-weight: 700; color: var(--brand-dark); }
 .card .sku { font-size: 11px; color: var(--muted); }
 
@@ -180,6 +187,10 @@ body {
   display: grid;
   place-items: center;
 }
+
+/* สินค้าหมด — กดไม่ได้ */
+.card.sold-out { opacity: .5; cursor: not-allowed; }
+.card.sold-out:hover { transform: none; border-color: var(--line); box-shadow: var(--shadow); }
 
 .card.hit { animation: pop .28s ease; }
 @keyframes pop {
@@ -388,10 +399,19 @@ body {
 }
 
 /* ---------- เมนูสลับหน้า ---------- */
-.nav { display: flex; gap: 8px; flex: 0 0 auto; }
+.nav {
+  display: flex;
+  gap: 8px;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nav::-webkit-scrollbar { display: none; }
 
 .nav-link {
   display: inline-block;
+  flex: 0 0 auto;
   padding: 10px 16px;
   border-radius: 12px;
   border: 1px solid var(--line);
@@ -420,6 +440,9 @@ body {
   align-items: start;
 }
 
+/* ปล่อยให้คอลัมน์ย่อได้ กันฟอร์ม/ตารางดันหน้าให้กว้างเกินจอมือถือ */
+.admin > *, .report > *, .report-cols > * { min-width: 0; }
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -434,6 +457,8 @@ body {
 .req { color: var(--danger); }
 
 .field input {
+  width: 100%;
+  min-width: 0;
   font: inherit;
   font-size: 15px;
   padding: 11px 14px;
@@ -495,6 +520,7 @@ body {
 .list-tools { display: flex; align-items: center; gap: 12px; }
 
 .filter-input {
+  min-width: 0;
   font: inherit;
   font-size: 14px;
   padding: 9px 14px;
@@ -502,7 +528,8 @@ body {
   border-radius: 999px;
   background: #fafbfc;
   outline: none;
-  min-width: 200px;
+  width: 100%;
+  max-width: 260px;
 }
 .filter-input:focus { border-color: var(--brand); background: #fff; }
 
@@ -613,8 +640,17 @@ body {
   .sub { display: none; }
   .search-wrap { order: 3; flex-basis: 100%; max-width: none; }
   #search { font-size: 16px; padding: 11px 40px 11px 42px; }
-  .nav { margin-left: auto; }
+  .nav {
+    order: 2;
+    flex-basis: 100%;
+    margin: 0 -14px;
+    padding: 0 14px;
+  }
   .nav-link { padding: 8px 12px; font-size: 13px; }
+
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .panel { padding: 14px; }
+  .field-row { gap: 10px; }
 
   /* หมวดหมู่: เลื่อนแนวนอนบรรทัดเดียว แทนการขึ้นบรรทัดใหม่ */
   .chips {
@@ -628,8 +664,8 @@ body {
   .chip { flex: 0 0 auto; }
 
   /* การ์ด 3 ชิ้นต่อแถวเหมือนเดิม แต่กระชับขึ้น */
-  .grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .card { padding: 12px 6px 10px; gap: 5px; }
+  .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .card { padding: 12px 5px 10px; gap: 5px; min-width: 0; }
   .card .emoji { font-size: 32px; }
   .card .name { font-size: 12px; line-height: 1.35; }
   .card .price { font-size: 15px; }
