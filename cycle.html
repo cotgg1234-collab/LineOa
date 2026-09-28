@@ -7,44 +7,70 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css?v=16" />
+<link rel="stylesheet" href="styles.css?v=17" />
 </head>
-<body>
-<main class="report">
+<body class="big-ui">
+<main class="report cycle-page">
   <!-- สถานะรอบ -->
   <section class="panel cycle-head" id="cycleHead"></section>
 
   <!-- ใบสั่งของ / รับของ -->
   <section class="panel">
-    <div class="list-head">
-      <h2 id="listTitle">ใบสั่งของรอบนี้</h2>
-      <div class="list-tools" id="listTools"></div>
-    </div>
-
+    <h2 class="big-title" id="listTitle">ใบสั่งของรอบนี้</h2>
     <p class="basis-note" id="basisNote"></p>
 
-    <div class="table-wrap">
-      <table class="table order-table">
-        <thead id="orderHead"></thead>
-        <tbody id="orderBody"></tbody>
-      </table>
-      <p class="empty" id="orderEmpty" hidden></p>
-    </div>
+    <ul class="order-list" id="orderList"></ul>
+    <p class="empty" id="orderEmpty" hidden></p>
 
     <div class="order-actions" id="orderActions"></div>
   </section>
 
+  <!-- ตั้งค่ารอบ -->
+  <section class="panel">
+    <h2 class="big-title">ตั้งค่ารอบ</h2>
+    <div class="setting">
+      <span class="setting-label">สั่งของทุก ๆ</span>
+      <span class="big-stepper">
+        <button class="big-step" id="daysDec" type="button" aria-label="ลดจำนวนวัน">−</button>
+        <b class="big-num" id="daysVal">14</b>
+        <button class="big-step" id="daysInc" type="button" aria-label="เพิ่มจำนวนวัน">+</button>
+      </span>
+      <span class="setting-unit">วัน</span>
+    </div>
+    <div class="setting">
+      <span class="setting-label">สั่งเผื่อเพิ่ม</span>
+      <span class="big-stepper">
+        <button class="big-step" id="safetyDec" type="button" aria-label="ลดเปอร์เซ็นต์">−</button>
+        <b class="big-num" id="safetyVal">20</b>
+        <button class="big-step" id="safetyInc" type="button" aria-label="เพิ่มเปอร์เซ็นต์">+</button>
+      </span>
+      <span class="setting-unit">%</span>
+    </div>
+    <p class="hint-big">กดแล้วบันทึกทันที · ตัวเลขที่แนะนำในใบสั่งจะเปลี่ยนตาม</p>
+  </section>
+
   <!-- ประวัติรอบที่ผ่านมา -->
   <section class="panel">
-    <div class="list-head"><h2>ประวัติรอบที่ผ่านมา</h2></div>
+    <h2 class="big-title">ประวัติรอบที่ผ่านมา</h2>
     <ul class="bill-list" id="historyList"></ul>
     <p class="empty" id="historyEmpty" hidden>ยังไม่มีรอบที่ปิดแล้ว</p>
   </section>
 </main>
 
+<!-- เลือกสินค้าเพิ่มในใบสั่ง -->
+<div class="modal" id="pickModal" hidden>
+  <div class="modal-card pick-card" role="dialog" aria-modal="true" aria-labelledby="pickTitle">
+    <button class="close-x" id="pickClose" type="button" aria-label="ปิด">✕</button>
+    <h2 id="pickTitle">เลือกสินค้าที่จะสั่ง</h2>
+    <input id="pickSearch" class="pick-search" type="search" placeholder="พิมพ์ชื่อสินค้า…" autocomplete="off" />
+    <ul class="pick-list" id="pickList"></ul>
+    <p class="empty" id="pickEmpty" hidden>สินค้าทุกชิ้นอยู่ในใบสั่งแล้ว</p>
+  </div>
+</div>
+
 <div class="toast" id="toast" hidden></div>
 
-<script src="store.js?v=16"></script>
-<script src="cycle.js?v=7"></script>
+<script src="store.js?v=17"></script>
+<script src="cycle.js?v=17"></script>
 </body>
 </html>
