@@ -11,8 +11,7 @@ const el = {
   name: $('fName'), price: $('fPrice'), stock: $('fStock'),
   submitBtn: $('submitBtn'), cancelEdit: $('cancelEdit'),
   prodList: $('prodList'), listEmpty: $('listEmpty'), count: $('count'),
-  filter: $('filter'), lowOnly: $('lowOnly'), resetStore: $('resetStore'),
-  fillStock: $('fillStock'), addNew: $('addNew'),
+  filter: $('filter'), resetStore: $('resetStore'),
   qrModal: $('qrModal'), qrAdded: $('qrAdded'), qrImg: $('qrImg'),
   qrDownload: $('qrDownload'), qrAddNext: $('qrAddNext'), qrX: $('qrX'),
   toast: $('toast'),
@@ -20,7 +19,6 @@ const el = {
 
 const baht = (n) => '฿' + Number(n || 0).toLocaleString('th-TH');
 
-let lowOnly = false;      // กรองเฉพาะสินค้าที่ถึงจุดสั่งซื้อ
 let photo = '';           // รูปในฟอร์มตอนนี้ (data URL)
 let qrProduct = null;     // สินค้าที่เปิด QR อยู่
 let qrPng = '';           // รูป QR + ชื่อสินค้า (data URL) ของสินค้าที่เปิดอยู่
@@ -90,13 +88,10 @@ el.photoRemove.addEventListener('click', () => setPhoto(''));
 function renderTable() {
   const q = el.filter.value.trim().toLowerCase();
   const list = Store.all()
-    .filter((p) => !q || (p.name + ' ' + p.sku + ' ' + p.cat).toLowerCase().includes(q))
-    .filter((p) => !lowOnly || stockLevel(p) !== 'ok');
+    .filter((p) => !q || (p.name + ' ' + p.sku + ' ' + p.cat).toLowerCase().includes(q));
 
   const lowCount = Store.lowStock().length;
   el.count.textContent = `${list.length} รายการ` + (lowCount ? ` · ใกล้หมด ${lowCount}` : '');
-  el.lowOnly.classList.toggle('active', lowOnly);
-  el.lowOnly.setAttribute('aria-pressed', String(lowOnly));
   el.prodList.innerHTML = '';
   el.listEmpty.hidden = list.length > 0;
 
@@ -284,7 +279,6 @@ el.qrDownload.addEventListener('click', downloadQr);
 el.qrAddNext.addEventListener('click', goAddProduct);
 el.qrX.addEventListener('click', closeQr);
 el.qrModal.addEventListener('click', (e) => { if (e.target === el.qrModal) closeQr(); });
-el.addNew.addEventListener('click', goAddProduct);
 
 /* ---------- ฟอร์ม ---------- */
 function showError(msg) {
@@ -363,29 +357,7 @@ el.resetStore.addEventListener('click', () => {
   toast('ลบสินค้าทั้งหมดแล้ว');
 });
 
-// ตั้งสต็อกให้สินค้าที่ยังเป็น 0 ทั้งหมดในครั้งเดียว (ใช้ตอนเริ่มใช้ระบบ)
-el.fillStock.addEventListener('click', () => {
-  const zero = Store.all().filter((p) => p.stock <= 0);
-  if (!zero.length) return toast('ไม่มีสินค้าที่สต็อกเป็น 0');
-
-  const input = prompt(`ตั้งจำนวนคงเหลือให้สินค้าที่ยังเป็น 0 จำนวน ${zero.length} รายการ
-ใส่จำนวน:`, '10');
-  if (input === null) return;
-  const qty = Number(input);
-  if (!Number.isFinite(qty) || qty < 0) return toast('กรุณาใส่ตัวเลขไม่ติดลบ');
-
-  const list = Store.all().map((p) => (p.stock <= 0 ? { ...p, stock: qty } : p));
-  Store.saveAll(list);
-  refreshAll();
-  toast(`ตั้งสต็อก ${zero.length} รายการเป็น ${qty} แล้ว`);
-});
-
 el.filter.addEventListener('input', renderTable);
-
-el.lowOnly.addEventListener('click', () => {
-  lowOnly = !lowOnly;
-  renderTable();
-});
 
 /* ---------- เริ่มต้น ---------- */
 resetForm();
