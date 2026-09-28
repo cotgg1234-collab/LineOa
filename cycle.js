@@ -106,7 +106,7 @@ function renderOrderMode() {
   el.listTitle.textContent = 'ของที่ต้องสั่งรอบนี้';
   el.basisNote.hidden = false;
   el.basisNote.textContent = span
-    ? `ระบบคำนวณจากยอดขาย ${span} วันที่ผ่านมา ให้พอขาย ${s.cycleDays} วัน (เผื่อ ${Math.round((s.safety - 1) * 100)}%) ถ้าต้องการจำนวนอื่นกด − / + ได้`
+    ? `ระบบคำนวณจากยอดขาย ${span < MIN_HISTORY_DAYS ? `${span} วัน (ข้อมูลยังไม่ถึง ${MIN_HISTORY_DAYS} วัน จึงเฉลี่ยเป็น ${MIN_HISTORY_DAYS} วัน)` : `${span} วันที่ผ่านมา`} ให้พอขาย ${s.cycleDays} วัน (เผื่อ ${Math.round((s.safety - 1) * 100)}%) ถ้าต้องการจำนวนอื่นกด − / + ได้`
     : 'ยังไม่มียอดขาย ระบบจึงคำนวณจาก "จุดสั่งซื้อ" ไปก่อน ถ้าต้องการจำนวนอื่นกด − / + ได้';
 
   el.orderEmpty.textContent = 'ยังไม่มีของที่ต้องสั่ง — ของในร้านพอขายถึงรอบหน้า';

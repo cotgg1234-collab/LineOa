@@ -338,6 +338,9 @@ const Sales = {
 };
 
 /* ---------- คำนวณของที่ต้องสั่ง ---------- */
+/** หารด้วยอย่างน้อยเท่านี้วันเสมอ — กันยอดขายวันเดียว (เช่น ขายวันแรก 40 ชิ้น) ถูกคูณเป็นยอดสั่งทั้งรอบ */
+const MIN_HISTORY_DAYS = 7;
+
 const Forecast = {
   bills() {
     return Sales.lastDays(Settings.get().historyDays);
@@ -353,9 +356,10 @@ const Forecast = {
     return Math.min(days, s.historyDays);
   },
 
-  /** ขายเฉลี่ยต่อวันของแต่ละ sku — คืน Map(sku -> number) */
+  /** ขายเฉลี่ยต่อวันของแต่ละ sku — คืน Map(sku -> number)
+   *  ข้อมูลยังไม่ถึง 7 วันก็หารด้วย 7 (ถือว่าวันที่ยังไม่มีข้อมูลขายได้ 0) */
   avgDaily() {
-    const span = this.historySpan();
+    const span = this.historySpan() && Math.max(this.historySpan(), MIN_HISTORY_DAYS);
     const acc = new Map();
     if (!span) return acc;
 
