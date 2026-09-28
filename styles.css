@@ -384,6 +384,145 @@ body {
 .receipt-list li { display: flex; justify-content: space-between; padding: 3px 0; }
 .receipt-total { display: flex; justify-content: space-between; font-size: 19px; }
 
+/* ---------- สแกน QR ---------- */
+.scan-btn {
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 13px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--brand);
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.scan-btn:hover { background: var(--brand-dark); }
+
+.scan-more {
+  width: 100%;
+  margin-top: 8px;
+  font: inherit;
+  font-size: 15px;
+  padding: 12px;
+  border: 2px solid var(--brand);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--brand-dark);
+  cursor: pointer;
+}
+.scan-more:hover { background: #f3fdf7; }
+
+.scan-hint { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+.reader {
+  width: 100%;
+  min-height: 240px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #0f1720;
+}
+.reader video { display: block; width: 100% !important; }
+.scan-error {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fdecec;
+  color: var(--danger);
+  font-size: 14px;
+}
+
+/* ---------- เลือกจำนวน (แถบเลื่อน) ---------- */
+.qty-card { text-align: left; --slide: #3dbea9; }
+.qty-product { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.qty-emoji {
+  flex: 0 0 auto;
+  width: 60px; height: 60px;
+  display: grid; place-items: center;
+  font-size: 34px;
+  border-radius: 14px;
+  background: var(--bg);
+}
+.qty-product h2 { font-size: 19px; margin: 0 0 2px; }
+.qty-meta { margin: 0; font-size: 13px; color: var(--muted); }
+
+.slider-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.slider-label { font-size: 15px; color: var(--muted); }
+.slider-value { font-size: 15px; color: var(--muted); white-space: nowrap; }
+.slider-value b { font-size: 34px; font-weight: 700; color: var(--slide); margin-right: 4px; }
+
+.slider-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.step {
+  flex: 0 0 auto;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: #fff;
+  font-size: 20px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.step:disabled { opacity: .35; cursor: default; }
+
+.range {
+  --pct: 0%;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 36px;
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.range:disabled { cursor: default; }
+.range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--slide) var(--pct), #e6e9ec var(--pct));
+}
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 32px; height: 32px;
+  margin-top: -13px;
+  border-radius: 50%;
+  background: var(--slide);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .22);
+}
+.range::-moz-range-track { height: 6px; border-radius: 999px; background: #e6e9ec; }
+.range::-moz-range-progress { height: 6px; border-radius: 999px; background: var(--slide); }
+.range::-moz-range-thumb {
+  width: 32px; height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--slide);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .22);
+}
+
+.slider-scale {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 48px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.qty-sum { margin: 18px 0 0; font-size: 16px; color: var(--muted); text-align: right; }
+.qty-sum b { font-size: 22px; color: var(--ink); }
+.qty-card .ghost-btn { display: block; margin: 10px auto 0; }
+
+/* ---------- QR ของสินค้า ---------- */
+.qr-box { width: min(240px, 70vw); margin: 0 auto 12px; }
+.qr-box svg { display: block; width: 100%; height: auto; }
+.qr-sub { margin: 0 0 6px; color: var(--muted); }
+
+/* พิมพ์เฉพาะ QR ที่เปิดอยู่ */
+@media print {
+  body:has(#qrModal:not([hidden])) > *:not(#qrModal) { display: none !important; }
+  #qrModal { position: static; background: none; padding: 0; }
+  #qrModal .qr-card { box-shadow: none; animation: none; }
+  #qrModal button { display: none; }
+}
+
 /* ---------- Toast ---------- */
 .toast {
   position: fixed;
@@ -638,7 +777,8 @@ body {
   .logo { font-size: 26px; }
   .brand h1 { font-size: 16px; }
   .sub { display: none; }
-  .search-wrap { order: 3; flex-basis: 100%; max-width: none; }
+  .search-wrap { order: 3; flex: 1 1 180px; max-width: none; }
+  .scan-btn { order: 3; padding: 11px 14px; font-size: 15px; }
   #search { font-size: 16px; padding: 11px 40px 11px 42px; }
   .nav {
     order: 2;
@@ -710,7 +850,8 @@ body {
   body:not(.cart-open) .cart .cart-head,
   body:not(.cart-open) .cart .cart-list,
   body:not(.cart-open) .cart .cart-empty,
-  body:not(.cart-open) .cart .totals .row:not(.grand) { display: none; }
+  body:not(.cart-open) .cart .totals .row:not(.grand),
+  body:not(.cart-open) .cart .scan-more { display: none; }
 
   body:not(.cart-open) .cart .totals { border-top: 0; margin-top: 0; padding-top: 0; }
   .cart .totals .grand { padding-top: 0; }

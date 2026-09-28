@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css?v=7" />
+<link rel="stylesheet" href="styles.css?v=8" />
 </head>
 <body>
 <header class="topbar">
@@ -16,6 +16,8 @@
     <input id="search" type="search" placeholder="ค้นหาสินค้า / รหัส / บาร์โค้ด…" autocomplete="off" autofocus />
     <button id="clearSearch" class="clear-btn" type="button" title="ล้างคำค้นหา" hidden>✕</button>
   </div>
+
+  <button id="scanBtn" class="scan-btn" type="button">📷 สแกน QR</button>
 
   <nav class="nav">
     <a class="nav-link active" href="index.html">🛒 ขาย</a>
@@ -45,7 +47,7 @@
     </div>
 
     <ul class="cart-list" id="cartList"></ul>
-    <p class="cart-empty" id="cartEmpty">ยังไม่มีสินค้า — คลิกการ์ดสินค้าเพื่อเพิ่ม</p>
+    <p class="cart-empty" id="cartEmpty">ยังไม่มีสินค้า — กด “สแกน QR” เพื่อเพิ่ม</p>
 
     <div class="totals">
       <div class="row"><span>จำนวนชิ้น</span><span id="totalQty">0</span></div>
@@ -53,9 +55,49 @@
       <div class="row grand"><span>ต้องชำระ</span><span id="grandTotal">฿0</span></div>
     </div>
 
-    <button id="payBtn" class="pay-btn" type="button" disabled>ชำระเงิน</button>
+    <button id="payBtn" class="pay-btn" type="button" disabled>ยืนยันขาย</button>
+    <button id="scanMore" class="scan-more" type="button">📷 สแกนสินค้าเพิ่ม</button>
   </aside>
 </main>
+
+<!-- สแกน QR -->
+<div class="modal" id="scanModal" hidden>
+  <div class="modal-card scan-card" role="dialog" aria-modal="true" aria-labelledby="scanTitle">
+    <h2 id="scanTitle">สแกน QR สินค้า</h2>
+    <p class="scan-hint">หันกล้องไปที่ QR Code บนสินค้า</p>
+    <div id="reader" class="reader"></div>
+    <p class="scan-error" id="scanError" hidden></p>
+    <button class="ghost-btn" id="cancelScan" type="button">ปิด</button>
+  </div>
+</div>
+
+<!-- เลือกจำนวน -->
+<div class="modal" id="qtyModal" hidden>
+  <div class="modal-card qty-card" role="dialog" aria-modal="true" aria-labelledby="qtyName">
+    <div class="qty-product">
+      <span class="qty-emoji" id="qtyEmoji">📦</span>
+      <div>
+        <h2 id="qtyName">ชื่อสินค้า</h2>
+        <p class="qty-meta" id="qtyMeta"></p>
+      </div>
+    </div>
+
+    <div class="slider-head">
+      <span class="slider-label">เลือกจำนวนที่ต้องการ</span>
+      <span class="slider-value"><b id="qtyValue">1</b> ชิ้น</span>
+    </div>
+    <div class="slider-row">
+      <button class="step" id="qtyDec" type="button" aria-label="ลด 1">−</button>
+      <input id="qtyRange" class="range" type="range" min="1" max="1" step="1" value="1" aria-label="จำนวน" />
+      <button class="step" id="qtyInc" type="button" aria-label="เพิ่ม 1">+</button>
+    </div>
+    <div class="slider-scale"><span id="qtyMin">1 ชิ้น</span><span id="qtyMax">1 ชิ้น</span></div>
+
+    <p class="qty-sum">รวม <b id="qtySum">฿0</b></p>
+    <button class="pay-btn" id="qtyConfirm" type="button">ยืนยัน ใส่ตะกร้า</button>
+    <button class="ghost-btn" id="qtyCancel" type="button">ยกเลิก</button>
+  </div>
+</div>
 
 <!-- ชำระเงิน -->
 <div class="modal" id="payModal" hidden>
@@ -84,7 +126,8 @@
 
 <div class="toast" id="toast" hidden></div>
 
-<script src="store.js?v=7"></script>
-<script src="app.js?v=7"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="store.js?v=8"></script>
+<script src="app.js?v=8"></script>
 </body>
 </html>

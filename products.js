@@ -13,6 +13,8 @@ const el = {
   tbody: $('tbody'), listEmpty: $('listEmpty'), count: $('count'),
   filter: $('filter'), resetStore: $('resetStore'), fillStock: $('fillStock'),
   toast: $('toast'),
+  qrModal: $('qrModal'), qrBox: $('qrBox'), qrName: $('qrName'), qrSub: $('qrSub'),
+  qrPrint: $('qrPrint'), qrClose: $('qrClose'),
 };
 
 const EMOJIS = ['📦','🍚','🍜','🥚','🥛','💧','🥤','☕','🍞','🥐','🥔','🍫','🍨','🍌','🍎','🍗','🍱','🍢','🧼','🪥','🧻','🔋','🛢️','🧴','🍬','🧃','🥫','🍖'];
@@ -104,6 +106,7 @@ function renderTable() {
         </span>
       </td>
       <td class="right nowrap">
+        <button class="mini-btn" data-act="qr" type="button">QR</button>
         <button class="mini-btn" data-act="edit" type="button">แก้ไข</button>
         <button class="mini-btn danger" data-act="del" type="button">ลบ</button>
       </td>`;
@@ -115,6 +118,7 @@ function renderTable() {
       Store.adjustStock(p.sku, 1);
       refreshAll();
     });
+    tr.querySelector('[data-act="qr"]').addEventListener('click', () => showQr(p));
     tr.querySelector('[data-act="edit"]').addEventListener('click', () => startEdit(p));
     tr.querySelector('[data-act="del"]').addEventListener('click', () => {
       if (!confirm(`ลบ "${p.name}" ออกจากรายการสินค้า?`)) return;
@@ -126,6 +130,22 @@ function renderTable() {
     el.tbody.appendChild(tr);
   }
 }
+
+/* ---------- QR ของสินค้า (ข้อมูลใน QR = รหัสสินค้า) ---------- */
+function showQr(p) {
+  if (typeof qrcode === 'undefined') { toast('โหลดตัวสร้าง QR ไม่สำเร็จ — ตรวจสอบอินเทอร์เน็ต'); return; }
+  const qr = qrcode(0, 'M');
+  qr.addData(p.sku);
+  qr.make();
+  el.qrBox.innerHTML = qr.createSvgTag({ cellSize: 8, margin: 2, scalable: true });
+  el.qrName.textContent = p.name;
+  el.qrSub.textContent = `รหัส ${p.sku} · ${baht(p.price)}`;
+  el.qrModal.hidden = false;
+}
+
+el.qrClose.addEventListener('click', () => { el.qrModal.hidden = true; });
+el.qrModal.addEventListener('click', (e) => { if (e.target === el.qrModal) el.qrModal.hidden = true; });
+el.qrPrint.addEventListener('click', () => window.print());
 
 function refreshAll() {
   renderTable();
