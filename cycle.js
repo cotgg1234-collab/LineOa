@@ -8,7 +8,7 @@
 const $ = (id) => document.getElementById(id);
 const el = {
   cycleHead: $('cycleHead'),
-  listTitle: $('listTitle'), basisNote: $('basisNote'),
+  listTitle: $('listTitle'),
   orderList: $('orderList'), orderEmpty: $('orderEmpty'), orderActions: $('orderActions'),
   daysDec: $('daysDec'), daysVal: $('daysVal'), daysInc: $('daysInc'),
   safetyDec: $('safetyDec'), safetyVal: $('safetyVal'), safetyInc: $('safetyInc'),
@@ -17,7 +17,6 @@ const el = {
 };
 
 const fmtDate = (d) => new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
-const fmtAvg = (x) => (x >= 10 ? Math.round(x) : x.toFixed(1).replace(/\.0$/, ''));
 
 let toastTimer;
 function toast(msg) {
@@ -56,7 +55,6 @@ function renderHead() {
 
   if (open) {
     el.cycleHead.innerHTML = `
-      <p class="cycle-state">สั่งของรอบที่ ${open.no} แล้ว</p>
       <p class="cycle-big">รอไปรับของ</p>
       <p class="cycle-sub">สั่งเมื่อ ${fmtDate(open.orderedAt)} · ${open.lines.length} รายการ</p>`;
     return;
@@ -64,7 +62,6 @@ function renderHead() {
 
   const late = c.remaining <= 0;
   el.cycleHead.innerHTML = `
-    <p class="cycle-state">${late ? 'ถึงรอบสั่งของแล้ว' : 'กำลังขาย'}</p>
     <p class="cycle-big ${late ? 'due' : ''}">${late ? `เลยกำหนดมา ${Math.abs(c.remaining)} วัน` : `อีก ${c.remaining} วันถึงรอบสั่ง`}</p>
     <p class="cycle-sub">ครบรอบวันที่ ${fmtDate(c.due)}</p>
     <div class="cycle-bar"><span style="width:${Math.min(100, Math.max(0, (c.elapsed / c.cycleDays) * 100))}%"></span></div>`;
@@ -99,15 +96,8 @@ function bindStepper(li, onChange) {
 /* ---------- โหมดที่ 1: ใบสั่งของ ---------- */
 function renderOrderMode() {
   const rows = orderRows();
-  const s = Settings.get();
-  const span = Forecast.historySpan();
-  const remaining = Settings.cycleStatus().remaining;
 
   el.listTitle.textContent = 'ของที่ต้องสั่งรอบนี้';
-  el.basisNote.hidden = false;
-  el.basisNote.textContent = span
-    ? `ระบบคำนวณจากยอดขาย ${span < MIN_HISTORY_DAYS ? `${span} วัน (ข้อมูลยังไม่ถึง ${MIN_HISTORY_DAYS} วัน จึงเฉลี่ยเป็น ${MIN_HISTORY_DAYS} วัน)` : `${span} วันที่ผ่านมา`} ให้พอขาย ${s.cycleDays} วัน (เผื่อ ${Math.round((s.safety - 1) * 100)}%) ถ้าต้องการจำนวนอื่นกด − / + ได้`
-    : 'ยังไม่มียอดขาย ระบบจึงคำนวณจาก "จุดสั่งซื้อ" ไปก่อน ถ้าต้องการจำนวนอื่นกด − / + ได้';
 
   el.orderEmpty.textContent = 'ยังไม่มีของที่ต้องสั่ง — ของในร้านพอขายถึงรอบหน้า';
   el.orderEmpty.hidden = rows.length > 0;
@@ -115,11 +105,6 @@ function renderOrderMode() {
   el.orderList.innerHTML = '';
   for (const r of rows) {
     const p = r.product;
-    const urgent = Number.isFinite(r.daysLeft) && r.daysLeft < remaining;
-    const facts = [`เหลือ <b class="${p.stock <= 0 ? 'out' : ''}">${p.stock}</b> ชิ้น`];
-    if (Number.isFinite(r.daysLeft)) {
-      facts.push(`<span class="${urgent ? 'out' : ''}">พอขายอีก ${Math.max(0, Math.floor(r.daysLeft))} วัน</span>`);
-    }
 
     const li = document.createElement('li');
     li.className = 'order-card' + (r.qty > 0 ? '' : ' zero');
@@ -128,8 +113,7 @@ function renderOrderMode() {
         ${thumbHTML(p, 'order-thumb')}
         <div class="order-info">
           <p class="order-name">${p.name}</p>
-          <p class="order-facts">${facts.join(' · ')}</p>
-          ${r.avg > 0 ? `<p class="order-facts">ขายวันละประมาณ ${fmtAvg(r.avg)} ชิ้น</p>` : ''}
+          <p class="order-facts">เหลือ <b class="${p.stock <= 0 ? 'out' : ''}">${p.stock}</b> ชิ้น</p>
         </div>
       </div>
       ${stepperHTML(r.qty, 'ต้องสั่ง')}`;
@@ -145,8 +129,7 @@ function renderOrderMode() {
   el.orderActions.innerHTML = rows.length
     ? `<p class="order-total" id="orderTotal"></p>
        <button class="line-btn" id="sendLine" type="button">ส่งรายการทาง LINE</button>
-       <button class="done-btn" id="placeOrder" type="button">สั่งของเรียบร้อยแล้ว</button>
-       <p class="hint-big center">กด "สั่งของเรียบร้อยแล้ว" เมื่อสั่งของแล้ว<br>ตอนไปรับของ หน้านี้จะให้ติ๊กของที่ได้รับ</p>`
+       <button class="done-btn" id="placeOrder" type="button">สั่งของเรียบร้อยแล้ว</button>`
     : '';
   if (rows.length) {
     $('sendLine').addEventListener('click', sendLine);
@@ -204,12 +187,8 @@ function renderReceiveMode(cycle) {
   for (const l of cycle.lines) {
     if (!recv.has(l.sku)) recv.set(l.sku, { checked: false, qty: l.ordered });
   }
-  const totalQty = cycle.lines.reduce((s, l) => s + l.ordered, 0);
 
   el.listTitle.textContent = `ของที่ต้องไปรับ รอบที่ ${cycle.no}`;
-  el.basisNote.hidden = false;
-  el.basisNote.innerHTML = `ต้องไปรับ <b>${cycle.lines.length}</b> รายการ · <b>${totalQty}</b> ชิ้น<br>
-    ได้ของแล้วติ๊กช่องหลังชื่อ — ถ้าจำนวนไม่ตรงกด "แก้จำนวน"`;
   el.orderEmpty.hidden = true;
 
   el.orderList.innerHTML = '';

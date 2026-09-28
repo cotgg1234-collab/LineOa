@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css?v=18" />
+<link rel="stylesheet" href="styles.css?v=22" />
 </head>
 <body>
 <main class="admin">
@@ -43,21 +43,6 @@
         </div>
       </div>
 
-      <details class="more">
-        <summary>ตั้งค่าเพิ่มเติม</summary>
-        <div class="field-row">
-          <div class="field">
-            <label for="fCat">หมวดหมู่</label>
-            <input id="fCat" type="text" list="catList" placeholder="ทั่วไป" />
-            <datalist id="catList"></datalist>
-          </div>
-          <div class="field">
-            <label for="fReorder">จุดสั่งซื้อ</label>
-            <input id="fReorder" type="number" min="0" step="1" placeholder="3" />
-            <span class="hint">เหลือเท่านี้หรือน้อยกว่า = ใกล้หมด</span>
-          </div>
-        </div>
-      </details>
 
       <p class="form-error" id="formError" hidden></p>
 
@@ -111,6 +96,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="store.js?v=18"></script>
-<script src="products.js?v=17"></script>
+<script src="products.js?v=21"></script>
 </body>
 </html>

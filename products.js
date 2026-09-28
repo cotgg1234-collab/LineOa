@@ -9,7 +9,6 @@ const el = {
   originalSku: $('originalSku'),
   image: $('fImage'), photoPreview: $('photoPreview'), photoEmpty: $('photoEmpty'), photoRemove: $('photoRemove'),
   name: $('fName'), price: $('fPrice'), stock: $('fStock'),
-  cat: $('fCat'), reorder: $('fReorder'), catList: $('catList'),
   submitBtn: $('submitBtn'), cancelEdit: $('cancelEdit'),
   tbody: $('tbody'), listEmpty: $('listEmpty'), count: $('count'),
   filter: $('filter'), lowOnly: $('lowOnly'), resetStore: $('resetStore'),
@@ -87,16 +86,6 @@ el.image.addEventListener('change', async () => {
 
 el.photoRemove.addEventListener('click', () => setPhoto(''));
 
-/* ---------- datalist หมวดหมู่ ---------- */
-function renderCatList() {
-  el.catList.innerHTML = '';
-  for (const c of Store.categories()) {
-    const o = document.createElement('option');
-    o.value = c;
-    el.catList.appendChild(o);
-  }
-}
-
 /* ---------- ตารางรายการ ---------- */
 function renderTable() {
   const q = el.filter.value.trim().toLowerCase();
@@ -153,7 +142,6 @@ function renderTable() {
 
 function refreshAll() {
   renderTable();
-  renderCatList();
 }
 
 /* ---------- QR ของสินค้า (ข้อมูลใน QR = รหัสสินค้า) ---------- */
@@ -314,8 +302,6 @@ function startEdit(p) {
   el.name.value = p.name;
   el.price.value = p.price;
   el.stock.value = p.stock;
-  el.cat.value = p.cat;
-  el.reorder.value = p.reorder;
   el.formTitle.textContent = `แก้ไข: ${p.name} (${p.sku})`;
   el.submitBtn.textContent = 'บันทึกการแก้ไข';
   el.cancelEdit.hidden = false;
@@ -330,7 +316,6 @@ el.form.addEventListener('submit', (e) => {
   const name = el.name.value.trim();
   const priceRaw = el.price.value.trim();
   const stockRaw = el.stock.value.trim();
-  const reorderRaw = el.reorder.value.trim();
 
   if (!name) return showError('กรุณากรอกชื่อสินค้า');
   if (priceRaw === '' || isNaN(Number(priceRaw)) || Number(priceRaw) < 0) {
@@ -338,9 +323,6 @@ el.form.addEventListener('submit', (e) => {
   }
   if (stockRaw !== '' && (isNaN(Number(stockRaw)) || Number(stockRaw) < 0)) {
     return showError('จำนวนต้องเป็นตัวเลขไม่ติดลบ');
-  }
-  if (reorderRaw !== '' && (isNaN(Number(reorderRaw)) || Number(reorderRaw) < 0)) {
-    return showError('จุดสั่งซื้อต้องเป็นตัวเลขไม่ติดลบ');
   }
 
   const editing = el.originalSku.value;
@@ -351,8 +333,8 @@ el.form.addEventListener('submit', (e) => {
     name,
     price: Number(priceRaw),
     stock: stockRaw === '' ? 0 : Number(stockRaw),
-    cat: el.cat.value.trim() || 'ทั่วไป',
-    reorder: reorderRaw === '' ? 3 : Number(reorderRaw),
+    cat: old?.cat || 'ทั่วไป',
+    reorder: old?.reorder ?? 3,
     image: photo,
   };
 
