@@ -147,15 +147,16 @@ const Store = {
  * ประวัติการขาย / ตั้งค่ารอบ / รอบสั่งของ
  * ========================================================================= */
 
-const SALES_KEY = 'pos.sales.v2';
+const SALES_KEY = 'pos.sales.v3';
 const SETTINGS_KEY = 'pos.settings.v1';
-const CYCLES_KEY = 'pos.cycles.v2';
+const CYCLES_KEY = 'pos.cycles.v3';
 
-// ล้างประวัติขาย/รอบสั่งของชุดเก่า (v1 อ้างรหัสสินค้าตัวอย่างที่ลบไปแล้ว) และเริ่มนับรอบใหม่ — ทำครั้งเดียวต่อเครื่อง
+// ล้างประวัติขาย/รอบสั่งของชุดเก่า (v1, v2 = ข้อมูลทดลอง) และเริ่มนับรอบใหม่ — ทำครั้งเดียวต่อเครื่อง
 try {
-  if (localStorage.getItem('pos.sales.v1') !== null || localStorage.getItem('pos.cycles.v1') !== null) {
-    localStorage.removeItem('pos.sales.v1');
-    localStorage.removeItem('pos.cycles.v1');
+  const OLD_KEYS = ['pos.sales.v1', 'pos.cycles.v1', 'pos.sales.v2', 'pos.cycles.v2'];
+  if (OLD_KEYS.some((k) => localStorage.getItem(k) !== null)) {
+    OLD_KEYS.forEach((k) => localStorage.removeItem(k));
+    localStorage.removeItem('pos.orderDraft.v1');
     const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
     delete s.lastReceivedAt;
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
@@ -242,7 +243,7 @@ const Sales = {
   },
 
   /** บันทึกบิล 1 ใบ — เก็บชื่อกับราคา ณ เวลาขายไว้ในบิล ไม่อ้างอิงสินค้าปัจจุบัน */
-  add({ items, total, method }) {
+  add({ items, total }) {
     const list = this.all();
     const now = new Date();
     const prefix = dayKey(now).replace(/-/g, '');
@@ -251,7 +252,6 @@ const Sales = {
     const bill = {
       id: `${prefix}-${String(seq).padStart(3, '0')}`,
       soldAt: now.toISOString(),
-      method,
       total,
       items: items.map((i) => ({ sku: i.sku, name: i.name, price: i.price, qty: i.qty })),
     };

@@ -1,5 +1,5 @@
 /* ร้านขายของ — ระบบขายหน้าร้าน (POS)
- * ขั้นตอนการขาย: สแกน QR -> เลื่อนเลือกจำนวน -> ยืนยันใส่ตะกร้า -> ยืนยันขาย -> เลือกวิธีจ่าย -> ใบเสร็จ
+ * ขั้นตอนการขาย: สแกน QR -> เลื่อนเลือกจำนวน -> ยืนยันใส่ตะกร้า -> ยืนยันขาย -> ขายสินค้าแล้ว
  * เปิดจาก Rich menu ด้วยลิงก์ index.html?scan=1 จะเปิดกล้องสแกนให้ทันที
  * ทางลัด: พิมพ์ค้นหาแล้วกด Enter เพื่อเพิ่มสินค้าอันดับแรกทันที
  */
@@ -22,7 +22,6 @@ const el = {
   totalQty: $('totalQty'), subtotal: $('subtotal'), grandTotal: $('grandTotal'),
   payBtn: $('payBtn'), clearCart: $('clearCart'),
   cart: $('cart'), toggleCart: $('toggleCart'), handleCount: $('handleCount'),
-  payModal: $('payModal'), payAmount: $('payAmount'), payMethods: $('payMethods'), cancelPay: $('cancelPay'),
   receiptModal: $('receiptModal'), receiptSub: $('receiptSub'), receiptList: $('receiptList'),
   receiptTotal: $('receiptTotal'), newSale: $('newSale'),
   toast: $('toast'),
@@ -297,19 +296,14 @@ function confirmQty() {
   el.cart.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-/* ---------- ชำระเงิน ---------- */
-function openPay() {
-  el.payAmount.textContent = baht(totals().sum);
-  el.payModal.hidden = false;
-}
-
-function finishSale(method) {
+/* ---------- ยืนยันขาย ---------- */
+function finishSale() {
   const { qty, sum } = totals();
   const now = new Date();
 
   el.receiptSub.textContent =
     `${now.toLocaleDateString('th-TH')} ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}` +
-    ` · ${qty} ชิ้น · ${method}`;
+    ` · ${qty} ชิ้น`;
 
   el.receiptList.innerHTML = '';
   for (const { product: p, qty: q } of cart.values()) {
@@ -321,7 +315,6 @@ function finishSale(method) {
 
   // บันทึกบิล (เก็บชื่อ+ราคา ณ ตอนขาย เพื่อให้ยอดย้อนหลังไม่เพี้ยนเมื่อแก้ราคาทีหลัง)
   Sales.add({
-    method,
     total: sum,
     items: [...cart.values()].map(({ product: p, qty: q }) => ({
       sku: p.sku, name: p.name, price: p.price, qty: q,
@@ -332,7 +325,6 @@ function finishSale(method) {
   Store.deductMany([...cart.values()].map(({ product, qty: q }) => ({ sku: product.sku, qty: q })));
   PRODUCTS = Store.all();
 
-  el.payModal.hidden = true;
   el.receiptModal.hidden = false;
 }
 
@@ -403,14 +395,8 @@ function collapseCart() {
   el.toggleCart.setAttribute('aria-expanded', 'false');
 }
 
-el.payBtn.addEventListener('click', openPay);
-el.cancelPay.addEventListener('click', () => { el.payModal.hidden = true; });
-el.payModal.addEventListener('click', (e) => { if (e.target === el.payModal) el.payModal.hidden = true; });
+el.payBtn.addEventListener('click', finishSale);
 
-el.payMethods.addEventListener('click', (e) => {
-  const btn = e.target.closest('.method');
-  if (btn) finishSale(btn.dataset.method);
-});
 
 el.newSale.addEventListener('click', startNewSale);
 
@@ -427,7 +413,7 @@ el.qtyCancel.addEventListener('click', () => { el.qtyModal.hidden = true; });
 el.qtyModal.addEventListener('click', (e) => { if (e.target === el.qtyModal) el.qtyModal.hidden = true; });
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'F2' && !el.payBtn.disabled) { e.preventDefault(); openPay(); }   // ทางลัดคีย์ลัด
+  if (e.key === 'F2' && !el.payBtn.disabled) { e.preventDefault(); finishSale(); }   // ทางลัดคีย์ลัด
   if (e.key === '/' && document.activeElement !== el.search) { e.preventDefault(); el.search.focus(); }
 });
 

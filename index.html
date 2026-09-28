@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css?v=24" />
+<link rel="stylesheet" href="styles.css?v=25" />
 </head>
 <body class="big-ui">
 <header class="topbar">
@@ -93,24 +93,11 @@
   </div>
 </div>
 
-<!-- ชำระเงิน -->
-<div class="modal" id="payModal" hidden>
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="payTitle">
-    <h2 id="payTitle">เลือกวิธีชำระเงิน</h2>
-    <p class="pay-amount">ยอดชำระ <b id="payAmount">฿0</b></p>
-    <div class="pay-methods" id="payMethods">
-      <button class="method" data-method="เงินสด" type="button">เงินสด</button>
-      <button class="method" data-method="พร้อมเพย์ / QR" type="button">พร้อมเพย์ / QR</button>
-    </div>
-    <button class="ghost-btn" id="cancelPay" type="button">ยกเลิก</button>
-  </div>
-</div>
-
 <!-- ใบเสร็จ -->
 <div class="modal" id="receiptModal" hidden>
   <div class="modal-card receipt" role="dialog" aria-modal="true" aria-labelledby="receiptTitle">
     <div class="check">✓</div>
-    <h2 id="receiptTitle">ขายสำเร็จ</h2>
+    <h2 id="receiptTitle">ขายสินค้าแล้ว</h2>
     <p class="receipt-sub" id="receiptSub"></p>
     <ul class="receipt-list" id="receiptList"></ul>
     <div class="receipt-total"><span>รวม</span><b id="receiptTotal">฿0</b></div>
@@ -121,7 +108,7 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script src="store.js?v=23"></script>
-<script src="app.js?v=23"></script>
+<script src="store.js?v=25"></script>
+<script src="app.js?v=25"></script>
 </body>
 </html>

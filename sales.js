@@ -6,7 +6,7 @@ const el = {
   rangePick: $('rangePick'),
   topBody: $('topBody'), topEmpty: $('topEmpty'),
   billList: $('billList'), billEmpty: $('billEmpty'),
-  exportCsv: $('exportCsv'), undoBill: $('undoBill'),
+  undoBill: $('undoBill'),
   toast: $('toast'),
 };
 
@@ -101,7 +101,7 @@ function renderBills() {
       <details>
         <summary>
           <span class="bill-time">${dateOf(b.soldAt)} ${timeOf(b.soldAt)}</span>
-          <span class="bill-meta">${b.items.reduce((n, i) => n + i.qty, 0)} ชิ้น · ${b.method}</span>
+          <span class="bill-meta">${b.items.reduce((n, i) => n + i.qty, 0)} ชิ้น</span>
           <span class="bill-total">${baht(b.total)}</span>
         </summary>
         <ul class="bill-items">
@@ -109,31 +109,6 @@ function renderBills() {
         </ul>
       </details>
     </li>`).join('');
-}
-
-/* ---------- ส่งออก CSV ---------- */
-function exportCsv() {
-  const bills = Sales.all();
-  if (!bills.length) return toast('ยังไม่มีข้อมูลให้ส่งออก');
-
-  const rows = [['bill_id', 'datetime', 'method', 'sku', 'name', 'price', 'qty', 'line_total']];
-  for (const b of bills) {
-    for (const i of b.items) {
-      rows.push([b.id, b.soldAt, b.method, i.sku, i.name, i.price, i.qty, i.price * i.qty]);
-    }
-  }
-  const csv = rows
-    .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
-    .join('\r\n');
-
-  // ﻿ = BOM ให้ Excel อ่านภาษาไทยไม่เป็นตัวต่างดาว
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `ยอดขาย-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-  toast('ส่งออกไฟล์ CSV แล้ว');
 }
 
 /* ---------- เหตุการณ์ ---------- */
@@ -144,8 +119,6 @@ el.rangePick.addEventListener('click', (e) => {
   [...el.rangePick.children].forEach((b) => b.classList.toggle('active', b === btn));
   renderAll();
 });
-
-el.exportCsv.addEventListener('click', exportCsv);
 
 el.undoBill.addEventListener('click', () => {
   const last = Sales.all().at(-1);

@@ -321,25 +321,7 @@ body {
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
 
 .modal-card h2 { margin: 0 0 6px; font-size: 21px; }
-.pay-amount { margin: 0 0 18px; color: var(--muted); }
-.pay-amount b { font-size: 26px; color: var(--ink); }
 
-.pay-methods { display: grid; gap: 10px; }
-.method {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font: inherit;
-  font-size: 17px;
-  padding: 16px 20px;
-  border: 2px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
-  cursor: pointer;
-  text-align: left;
-  transition: all .12s;
-}
-.method:hover { border-color: var(--brand); background: #f3fdf7; }
 
 .ghost-btn {
   margin-top: 14px;
@@ -1277,8 +1259,6 @@ body {
 .big-ui .cart-empty { font-size: 17px; }
 .big-ui .totals .row { font-size: 17px; }
 .big-ui .totals .grand { font-size: 24px; }
-.big-ui .method { font-size: 20px; padding: 18px 20px; }
-.big-ui .pay-amount { font-size: 17px; }
 .big-ui .receipt-sub, .big-ui .receipt-list { font-size: 16px; }
 .big-ui .receipt-total { font-size: 21px; }
 .big-ui .scan-hint, .big-ui .scan-error { font-size: 16px; }
