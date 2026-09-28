@@ -585,38 +585,6 @@ details.more[open] summary { color: var(--ink); }
   animation: rise .18s ease;
 }
 
-/* ---------- เมนูสลับหน้า ---------- */
-.nav {
-  display: flex;
-  gap: 8px;
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.nav::-webkit-scrollbar { display: none; }
-
-.nav-link {
-  display: inline-block;
-  flex: 0 0 auto;
-  padding: 10px 16px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--muted);
-  text-decoration: none;
-  font-size: 14px;
-  white-space: nowrap;
-  transition: all .12s;
-}
-.nav-link:hover { border-color: var(--brand); color: var(--brand-dark); }
-.nav-link.active {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: #fff;
-  font-weight: 500;
-}
-
 /* ---------- หน้าเพิ่มสินค้า ---------- */
 .admin {
   flex: 1 1 auto;
@@ -811,13 +779,6 @@ details.more[open] summary { color: var(--ink); }
   .search-wrap { order: 3; flex: 1 1 180px; max-width: none; }
   .scan-btn { order: 3; padding: 11px 14px; font-size: 15px; }
   #search { font-size: 16px; padding: 11px 40px 11px 42px; }
-  .nav {
-    order: 2;
-    flex-basis: 100%;
-    margin: 0 -14px;
-    padding: 0 14px;
-  }
-  .nav-link { padding: 8px 12px; font-size: 13px; }
 
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .list-tools { width: 100%; }
