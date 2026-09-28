@@ -10,7 +10,7 @@ const el = {
   image: $('fImage'), photoPreview: $('photoPreview'), photoEmpty: $('photoEmpty'), photoRemove: $('photoRemove'),
   name: $('fName'), price: $('fPrice'), stock: $('fStock'),
   submitBtn: $('submitBtn'), cancelEdit: $('cancelEdit'),
-  tbody: $('tbody'), listEmpty: $('listEmpty'), count: $('count'),
+  prodList: $('prodList'), listEmpty: $('listEmpty'), count: $('count'),
   filter: $('filter'), lowOnly: $('lowOnly'), resetStore: $('resetStore'),
   fillStock: $('fillStock'), addNew: $('addNew'),
   qrModal: $('qrModal'), qrAdded: $('qrAdded'), qrImg: $('qrImg'),
@@ -97,28 +97,34 @@ function renderTable() {
   el.count.textContent = `${list.length} รายการ` + (lowCount ? ` · ใกล้หมด ${lowCount}` : '');
   el.lowOnly.classList.toggle('active', lowOnly);
   el.lowOnly.setAttribute('aria-pressed', String(lowOnly));
-  el.tbody.innerHTML = '';
+  el.prodList.innerHTML = '';
   el.listEmpty.hidden = list.length > 0;
 
   for (const p of list) {
-    const tr = document.createElement('tr');
+    const tr = document.createElement('li');
+    tr.className = 'prod-card';
     tr.innerHTML = `
-      <td class="td-thumb">${thumbHTML(p, 'row-thumb')}</td>
-      <td class="td-sku">${p.sku}</td>
-      <td class="td-name">${p.name}<br><span class="td-cat">${p.cat}</span></td>
-      <td class="right td-price">${baht(p.price)}</td>
-      <td class="right nowrap">
-        <span class="stock-cell">
-          <button class="step-btn" data-act="minus" type="button" title="ลดสต็อก 1">−</button>
-          <span class="stock-num ${stockLevel(p)}">${p.stock}</span>
-          <button class="step-btn" data-act="plus" type="button" title="เพิ่มสต็อก 1">+</button>
+      <div class="prod-top">
+        ${thumbHTML(p, 'prod-thumb')}
+        <div class="prod-info">
+          <p class="prod-name">${p.name}</p>
+          <p class="prod-price">${baht(p.price)}</p>
+          <p class="prod-sku">รหัส ${p.sku}</p>
+        </div>
+      </div>
+      <div class="prod-stock">
+        <span class="prod-stock-label">คงเหลือ</span>
+        <span class="big-stepper">
+          <button class="big-step" data-act="minus" type="button" aria-label="ลดสต็อก 1">−</button>
+          <b class="big-num stock-num ${stockLevel(p)}">${p.stock}</b>
+          <button class="big-step" data-act="plus" type="button" aria-label="เพิ่มสต็อก 1">+</button>
         </span>
-      </td>
-      <td class="right nowrap">
-        <button class="mini-btn" data-act="qr" type="button">QR</button>
-        <button class="mini-btn" data-act="edit" type="button">แก้ไข</button>
-        <button class="mini-btn danger" data-act="del" type="button">ลบ</button>
-      </td>`;
+      </div>
+      <div class="prod-actions">
+        <button class="act-btn" data-act="qr" type="button">QR</button>
+        <button class="act-btn" data-act="edit" type="button">แก้ไข</button>
+        <button class="act-btn danger" data-act="del" type="button">ลบ</button>
+      </div>`;
     tr.querySelector('[data-act="minus"]').addEventListener('click', () => {
       Store.adjustStock(p.sku, -1);
       refreshAll();
@@ -136,7 +142,7 @@ function renderTable() {
       refreshAll();
       toast('ลบสินค้าแล้ว');
     });
-    el.tbody.appendChild(tr);
+    el.prodList.appendChild(tr);
   }
 }
 

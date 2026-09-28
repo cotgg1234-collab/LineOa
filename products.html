@@ -7,9 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css?v=22" />
+<link rel="stylesheet" href="styles.css?v=24" />
 </head>
-<body>
+<body class="big-ui">
 <main class="admin">
   <!-- ฟอร์มเพิ่ม / แก้ไข -->
   <section class="panel form-panel">
@@ -21,7 +21,7 @@
       <div class="photo-field">
         <label class="photo-pick" for="fImage" id="photoPick">
           <img id="photoPreview" alt="" hidden />
-          <span class="photo-empty" id="photoEmpty"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><small>แตะเพื่อถ่าย / เลือกรูป</small></span>
+          <span class="photo-empty" id="photoEmpty"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><small>แตะเพื่อใส่รูป</small></span>
         </label>
         <input id="fImage" type="file" accept="image/*" hidden />
         <button type="button" class="link-btn" id="photoRemove" hidden>ลบรูป</button>
@@ -35,11 +35,11 @@
       <div class="field-row">
         <div class="field">
           <label for="fPrice">ราคา (บาท) <span class="req">*</span></label>
-          <input id="fPrice" type="number" inputmode="decimal" min="0" step="1" placeholder="25" required />
+          <input id="fPrice" type="number" inputmode="decimal" min="0" step="1" required />
         </div>
         <div class="field">
           <label for="fStock">จำนวน</label>
-          <input id="fStock" type="number" inputmode="numeric" min="0" step="1" placeholder="0" />
+          <input id="fStock" type="number" inputmode="numeric" min="0" step="1" />
         </div>
       </div>
 
@@ -66,17 +66,8 @@
       </div>
     </div>
 
-    <div class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>รูป</th><th>รหัส</th><th>ชื่อสินค้า</th><th class="right">ราคา</th><th class="right">คงเหลือ</th><th></th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-      <p class="empty" id="listEmpty" hidden>ยังไม่มีสินค้า — เพิ่มจากฟอร์มด้านบน</p>
-    </div>
+    <ul class="prod-list" id="prodList"></ul>
+    <p class="empty" id="listEmpty" hidden>ยังไม่มีสินค้า — เพิ่มจากฟอร์มด้านบน</p>
   </section>
 </main>
 
@@ -95,7 +86,7 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="store.js?v=18"></script>
-<script src="products.js?v=21"></script>
+<script src="store.js?v=23"></script>
+<script src="products.js?v=24"></script>
 </body>
 </html>

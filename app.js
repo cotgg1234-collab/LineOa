@@ -46,6 +46,7 @@ function stockLevel(p) {
 function renderCategories() {
   const cats = ['ทั้งหมด', ...new Set(PRODUCTS.map((p) => p.cat))];
   el.categories.innerHTML = '';
+  el.categories.hidden = cats.length <= 2;   // มีหมวดเดียว ปุ่มหมวดไม่มีประโยชน์
   for (const cat of cats) {
     const btn = document.createElement('button');
     btn.type = 'button';

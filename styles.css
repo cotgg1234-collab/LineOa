@@ -1037,7 +1037,6 @@ body {
 
 /* ---------- ใบสั่งของ ---------- */
 /* ---------- หน้ารอบสั่งของ: ตัวใหญ่ ปุ่มใหญ่ ใช้ง่ายบนมือถือ ---------- */
-.big-ui { font-size: 17px; }
 .panel .big-title { margin: 0 0 12px; font-size: 22px; }
 .cycle-page .cycle-state { font-size: 17px; }
 .cycle-page .cycle-sub { font-size: 16px; }
@@ -1241,3 +1240,120 @@ body {
   .table .bar-col { display: none; }
   .table th, .table td { padding: 8px 6px; font-size: 13px; }
 }
+
+/* =========================================================================
+ * โหมดตัวใหญ่สำหรับผู้สูงอายุ (ทุกหน้า) — ตัวหนังสือรองไม่ต่ำกว่า 15px
+ * ปุ่มกดไม่เล็กกว่า 44px วางไว้ท้ายไฟล์เพื่อให้ชนะกฎเดิมทั้งหมด
+ * ========================================================================= */
+.big-ui { font-size: 17px; }
+.big-ui .muted, .big-ui .count { font-size: 15px; }
+
+/* ปุ่มทั่วไป */
+.big-ui .mini-btn, .big-ui .link-btn { font-size: 16px; padding: 10px 16px; min-height: 44px; }
+.big-ui .toast { font-size: 17px; padding: 14px 24px; }
+.big-ui .ghost-btn { font-size: 17px; }
+.big-ui .modal-card h2 { font-size: 22px; }
+.big-ui .pay-btn { font-size: 20px; padding: 17px; }
+.big-ui .scan-more { font-size: 18px; padding: 14px; }
+
+/* หน้าขาย */
+.big-ui #search { font-size: 18px; }
+.big-ui .scan-btn { font-size: 18px; }
+.big-ui .chip { font-size: 17px; padding: 10px 18px; }
+.big-ui .card .name { font-size: 18px; line-height: 1.35; }
+.big-ui .card .price { font-size: 22px; }
+.big-ui .card .sku { display: none; }
+.big-ui .stock-tag { font-size: 15px; padding: 3px 12px; }
+.big-ui .card .badge { min-width: 32px; height: 32px; font-size: 16px; }
+.big-ui .sheet-handle { font-size: 16px; }
+.big-ui .cart-head h2 { font-size: 21px; }
+.big-ui .cart-item .ci-name { font-size: 18px; }
+.big-ui .cart-item .ci-sum { font-size: 19px; }
+.big-ui .cart-item .ci-unit { font-size: 16px; }
+.big-ui .qty { gap: 8px; }
+.big-ui .qty button { width: 44px; height: 44px; font-size: 20px; border-radius: 12px; }
+.big-ui .qty button[data-act="del"] { width: auto; padding: 0 12px; font-size: 16px; color: var(--danger); }
+.big-ui .qty .n { font-size: 20px; min-width: 32px; }
+.big-ui .cart-empty { font-size: 17px; }
+.big-ui .totals .row { font-size: 17px; }
+.big-ui .totals .grand { font-size: 24px; }
+.big-ui .method { font-size: 20px; padding: 18px 20px; }
+.big-ui .pay-amount { font-size: 17px; }
+.big-ui .receipt-sub, .big-ui .receipt-list { font-size: 16px; }
+.big-ui .receipt-total { font-size: 21px; }
+.big-ui .scan-hint, .big-ui .scan-error { font-size: 16px; }
+.big-ui .qty-meta { font-size: 16px; }
+.big-ui .slider-label, .big-ui .slider-value { font-size: 17px; }
+.big-ui .slider-scale { font-size: 15px; }
+.big-ui .step { width: 48px; height: 48px; font-size: 24px; }
+
+/* หน้าสินค้า: ฟอร์ม */
+.big-ui .field label { font-size: 17px; color: var(--ink); }
+.big-ui .field input { font-size: 19px; padding: 13px 16px; }
+.big-ui .photo-empty small { font-size: 15px; }
+.big-ui .form-error { font-size: 16px; }
+.big-ui .qr-hint { font-size: 15px; }
+.big-ui .filter-input { font-size: 17px; padding: 11px 16px; }
+
+/* หน้าสินค้า: รายการเป็นการ์ด */
+.prod-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.prod-card { padding: 14px; border: 2px solid var(--line); border-radius: 16px; background: #fff; }
+.prod-top { display: flex; gap: 14px; align-items: center; }
+.prod-thumb { flex: 0 0 auto; width: 72px; height: 72px; border-radius: 12px; object-fit: cover; }
+.prod-info { min-width: 0; }
+.prod-name { margin: 0; font-size: 20px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+.prod-price { margin: 2px 0 0; font-size: 20px; font-weight: 700; color: var(--brand-dark); }
+.prod-sku { margin: 0; font-size: 15px; color: var(--muted); }
+.prod-stock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+.prod-stock-label { font-size: 17px; font-weight: 500; }
+.prod-stock .stock-num.low { color: #c46a00; }
+.prod-stock .stock-num.out { color: var(--danger); }
+.prod-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+.act-btn {
+  min-height: 48px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+}
+.act-btn.danger { color: var(--danger); }
+.act-btn:active { background: var(--bg); }
+
+/* หน้ายอดขาย */
+.big-ui .stat-label { font-size: 16px; }
+.big-ui .stat-value { font-size: 26px; }
+.big-ui .stat-sub { font-size: 15px; }
+.big-ui .seg-btn { font-size: 16px; padding: 10px 14px; }
+.big-ui .chart-note { font-size: 16px; }
+.big-ui .bar-label { font-size: 13px; }
+.big-ui .table { font-size: 17px; }
+.big-ui .table th { font-size: 15px; }
+.big-ui .bill summary { font-size: 17px; }
+.big-ui .bill-meta { font-size: 15px; }
+.big-ui .bill-items { font-size: 16px; }
+
+/* หน้ารอบสั่งของ */
+.big-ui .round-table th { font-size: 15px; }
+.big-ui .st { font-size: 15px; }
+
+@media (max-width: 900px) {
+  .big-ui .table th, .big-ui .table td { font-size: 16px; padding: 10px 6px; }
+  .big-ui .bar-label { font-size: 11px; }
+  .big-ui .stat-value { font-size: 23px; }
+  .big-ui .card .name { font-size: 17px; }
+}
+.big-ui .panel h2 { font-size: 22px; }
+.big-ui .photo-pick { width: 160px; height: 160px; }
+.big-ui ::placeholder { color: #aab4bf; }
