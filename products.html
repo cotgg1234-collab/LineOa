@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css?v=13" />
+<link rel="stylesheet" href="styles.css?v=14" />
 </head>
 <body>
 <header class="topbar">
@@ -92,7 +92,7 @@
         <input id="filter" type="search" class="filter-input" placeholder="กรองรายการ…" autocomplete="off" />
         <button class="mini-btn" id="lowOnly" type="button" aria-pressed="false">เฉพาะใกล้หมด</button>
         <button class="mini-btn" id="fillStock" type="button">เติมสต็อกทั้งหมด</button>
-        <button class="mini-btn" id="printAll" type="button">พิมพ์ QR ทั้งหมด</button>
+        <button class="mini-btn" id="addNew" type="button">เพิ่มสินค้า</button>
         <button class="link-btn" id="resetStore" type="button">ล้างสินค้าทั้งหมด</button>
       </div>
     </div>
@@ -119,18 +119,14 @@
     <div class="qr-box"><img id="qrImg" alt="" /></div>
     <p class="qr-hint">กดค้างที่รูปเพื่อบันทึกได้เช่นกัน</p>
     <button class="pay-btn" id="qrDownload" type="button">ดาวน์โหลด QR</button>
-    <button class="scan-more" id="qrPrint" type="button">พิมพ์ QR</button>
-    <button class="ghost-btn" id="qrClose" type="button">ปิด</button>
+    <button class="scan-more" id="qrAddNext" type="button">เพิ่มสินค้า</button>
   </div>
 </div>
-
-<!-- พื้นที่สำหรับพิมพ์ (ซ่อนบนจอ) -->
-<div id="printArea" class="print-area" aria-hidden="true"></div>
 
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="store.js?v=13"></script>
-<script src="products.js?v=13"></script>
+<script src="store.js?v=14"></script>
+<script src="products.js?v=14"></script>
 </body>
 </html>

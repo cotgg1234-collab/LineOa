@@ -530,32 +530,6 @@ body {
 }
 .close-x:hover { background: var(--line); color: var(--ink); }
 
-/* พิมพ์ QR: แสดงเฉพาะ #printArea เป็นแผ่นสติกเกอร์ 3 ดวงต่อแถว */
-.print-area { display: none; }
-@media print {
-  @page { margin: 10mm; }
-  body > *:not(#printArea) { display: none !important; }
-  body { display: block; background: #fff; }
-  .print-area {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6mm;
-  }
-  .label {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2mm;
-    padding: 4mm;
-    border: 1px dashed #999;
-    text-align: center;
-    break-inside: avoid;
-  }
-  .label svg { width: 38mm; height: 38mm; }
-  .label b { font-size: 11pt; line-height: 1.25; }
-  .label span { font-size: 10pt; color: #333; }
-}
-
 /* ---------- รูปสินค้า ---------- */
 .card-thumb, .row-thumb, .qty-thumb, .mini-thumb { object-fit: cover; display: block; }
 .thumb-empty { display: grid; place-items: center; background: var(--bg); color: #b5c0cc; }

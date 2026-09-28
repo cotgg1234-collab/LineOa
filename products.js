@@ -1,5 +1,5 @@
 /* products.js — หน้าเพิ่ม / แก้ไข / ลบ สินค้า
- * เพิ่มสินค้า: ใส่ รูป ชื่อ ราคา จำนวน -> ระบบออกรหัสให้เอง -> แสดง QR พร้อมพิมพ์ติดสินค้า
+ * เพิ่มสินค้า: ใส่ รูป ชื่อ ราคา จำนวน -> ระบบออกรหัสให้เอง -> แสดง QR ให้ดาวน์โหลดไปติดสินค้า
  * QR เก็บรหัสสินค้า (เช่น A01) ซึ่งหน้าขายใช้สแกน — รหัสจึงแก้ไม่ได้หลังสร้าง
  */
 
@@ -13,10 +13,9 @@ const el = {
   submitBtn: $('submitBtn'), cancelEdit: $('cancelEdit'),
   tbody: $('tbody'), listEmpty: $('listEmpty'), count: $('count'),
   filter: $('filter'), lowOnly: $('lowOnly'), resetStore: $('resetStore'),
-  fillStock: $('fillStock'), printAll: $('printAll'),
+  fillStock: $('fillStock'), addNew: $('addNew'),
   qrModal: $('qrModal'), qrAdded: $('qrAdded'), qrImg: $('qrImg'),
-  qrDownload: $('qrDownload'), qrPrint: $('qrPrint'), qrClose: $('qrClose'), qrX: $('qrX'),
-  printArea: $('printArea'),
+  qrDownload: $('qrDownload'), qrAddNext: $('qrAddNext'), qrX: $('qrX'),
   toast: $('toast'),
 };
 
@@ -26,7 +25,6 @@ let lowOnly = false;      // กรองเฉพาะสินค้าที
 let photo = '';           // รูปในฟอร์มตอนนี้ (data URL)
 let qrProduct = null;     // สินค้าที่เปิด QR อยู่
 let qrPng = '';           // รูป QR + ชื่อสินค้า (data URL) ของสินค้าที่เปิดอยู่
-let qrJustAdded = false;
 
 /** ระดับสต็อก: out = หมด, low = ใกล้หมด, ok = ปกติ */
 function stockLevel(p) {
@@ -159,13 +157,6 @@ function refreshAll() {
 }
 
 /* ---------- QR ของสินค้า (ข้อมูลใน QR = รหัสสินค้า) ---------- */
-function qrSvg(sku) {
-  const qr = qrcode(0, 'M');
-  qr.addData(sku);
-  qr.make();
-  return qr.createSvgTag({ cellSize: 8, margin: 2, scalable: true });
-}
-
 function qrReady() {
   if (typeof qrcode !== 'undefined') return true;
   toast('โหลดตัวสร้าง QR ไม่สำเร็จ — ตรวจสอบอินเทอร์เน็ต');
@@ -243,15 +234,13 @@ async function qrImage(p) {
   return canvas.toDataURL('image/png');
 }
 
-/** justAdded = เปิดหลังกดเพิ่มสินค้า (โชว์ข้อความสำเร็จ + ปุ่มเพิ่มชิ้นถัดไป) */
+/** justAdded = เปิดหลังกดเพิ่มสินค้า (โชว์ข้อความสำเร็จ) */
 async function showQr(p, justAdded = false) {
   if (!qrReady()) return;
   qrProduct = p;
-  qrJustAdded = justAdded;
   qrPng = '';
   el.qrAdded.textContent = justAdded ? 'เพิ่มสินค้าแล้ว' : 'QR สินค้า';
   el.qrAdded.classList.toggle('ok', justAdded);
-  el.qrClose.textContent = justAdded ? 'เพิ่มสินค้าถัดไป' : 'ปิด';
   el.qrImg.removeAttribute('src');
   el.qrModal.hidden = false;
   const png = await qrImage(p);
@@ -260,7 +249,14 @@ async function showQr(p, justAdded = false) {
 
 function closeQr() {
   el.qrModal.hidden = true;
-  if (qrJustAdded) el.name.focus();
+}
+
+/** ไปที่ฟอร์มเพิ่มสินค้าใหม่ (ล้างฟอร์ม เลื่อนขึ้นบน แล้วโฟกัสช่องชื่อ) */
+function goAddProduct() {
+  closeQr();
+  resetForm();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  el.name.focus({ preventScroll: true });
 }
 
 /** ดาวน์โหลดรูป QR — มือถือใช้เมนูแชร์ (มี "บันทึกรูปภาพ") ถ้าทำได้ ไม่งั้นดาวน์โหลดไฟล์ */
@@ -290,30 +286,11 @@ async function downloadQr() {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/* ---------- พิมพ์ ---------- */
-function labelHTML(p) {
-  return `<div class="label">${qrSvg(p.sku)}<b>${p.name}</b><span>${baht(p.price)} · ${p.sku}</span></div>`;
-}
-
-function printLabels(list) {
-  if (!qrReady()) return;
-  el.printArea.innerHTML = list.map(labelHTML).join('');
-  window.print();
-}
-
-window.addEventListener('afterprint', () => { el.printArea.innerHTML = ''; });
-
-el.qrPrint.addEventListener('click', () => printLabels([qrProduct]));
 el.qrDownload.addEventListener('click', downloadQr);
-el.qrClose.addEventListener('click', closeQr);
+el.qrAddNext.addEventListener('click', goAddProduct);
 el.qrX.addEventListener('click', closeQr);
 el.qrModal.addEventListener('click', (e) => { if (e.target === el.qrModal) closeQr(); });
-
-el.printAll.addEventListener('click', () => {
-  const list = Store.all();
-  if (!list.length) return toast('ยังไม่มีสินค้า');
-  printLabels(list);
-});
+el.addNew.addEventListener('click', goAddProduct);
 
 /* ---------- ฟอร์ม ---------- */
 function showError(msg) {
