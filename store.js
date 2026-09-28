@@ -147,7 +147,10 @@ const Store = {
  * ประวัติการขาย / ตั้งค่ารอบ / รอบสั่งของ
  * ========================================================================= */
 
-const SALES_KEY = 'pos.sales.v3';
+const SALES_KEY = 'pos.sales.v4';
+
+// ล้างบิลขายชุดทดลอง (v3) — ทำครั้งเดียวต่อเครื่อง สินค้า/สต็อก/รอบสั่งของไม่ถูกแตะ
+try { localStorage.removeItem('pos.sales.v3'); } catch { /* ไม่มี localStorage */ }
 const SETTINGS_KEY = 'pos.settings.v1';
 const CYCLES_KEY = 'pos.cycles.v3';
 
