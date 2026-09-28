@@ -1,8 +1,8 @@
 /* cycle.js — หน้ารอบสั่งของ (ออกแบบให้ตัวใหญ่ ปุ่มใหญ่ ใช้ง่ายบนมือถือ)
  * หน้าเดียว 2 โหมด:
- *   1) สั่งของ  — นับถอยหลัง + ใบสั่งของที่ระบบแนะนำ (แก้จำนวน / เพิ่มสินค้าเองได้) + ส่งรายการทาง LINE
- *   2) รับของ   — กรอกจำนวนที่รับจริง -> เติมสต็อก เริ่มรอบใหม่
- * ใบสั่งที่กำลังแก้ (จำนวน + สินค้าที่เพิ่มเอง) เก็บใน localStorage ปิดหน้าแล้วเปิดใหม่ไม่หาย
+ *   1) สั่งของ  — นับถอยหลัง + รายการที่ต้องสั่งพร้อมจำนวน (ระบบคำนวณให้ แก้จำนวนได้) + ส่งรายการทาง LINE
+ *   2) รับของ   — ติ๊กของที่ได้รับ (จำนวนไม่ตรงแก้ได้) -> เติมสต็อก เริ่มรอบใหม่
+ * จำนวนที่แก้ในใบสั่งเก็บใน localStorage ปิดหน้าแล้วเปิดใหม่ไม่หาย
  */
 
 const $ = (id) => document.getElementById(id);
@@ -13,8 +13,6 @@ const el = {
   daysDec: $('daysDec'), daysVal: $('daysVal'), daysInc: $('daysInc'),
   safetyDec: $('safetyDec'), safetyVal: $('safetyVal'), safetyInc: $('safetyInc'),
   historyList: $('historyList'), historyEmpty: $('historyEmpty'),
-  pickModal: $('pickModal'), pickClose: $('pickClose'), pickSearch: $('pickSearch'),
-  pickList: $('pickList'), pickEmpty: $('pickEmpty'),
   toast: $('toast'),
 };
 
@@ -29,52 +27,25 @@ function toast(msg) {
   toastTimer = setTimeout(() => { el.toast.hidden = true; }, 2000);
 }
 
-/* ---------- ใบสั่งที่กำลังแก้ (เก็บไว้ในเครื่อง) ---------- */
+/* ---------- จำนวนที่แก้ในใบสั่ง (เก็บไว้ในเครื่อง) ---------- */
 const DRAFT_KEY = 'pos.orderDraft.v1';
 
 const Draft = {
-  get() {
-    const d = readJSON(DRAFT_KEY, {});
-    return { qty: d.qty || {}, extra: Array.isArray(d.extra) ? d.extra : [] };
-  },
-  save(d) { writeJSON(DRAFT_KEY, d); },
+  get() { return readJSON(DRAFT_KEY, {}).qty || {}; },
   setQty(sku, n) {
-    const d = this.get();
-    d.qty[sku] = Math.max(0, n);
-    this.save(d);
-  },
-  addExtra(sku) {
-    const d = this.get();
-    if (!d.extra.includes(sku)) d.extra.push(sku);
-    if (!(sku in d.qty)) d.qty[sku] = 1;
-    this.save(d);
-  },
-  removeExtra(sku) {
-    const d = this.get();
-    d.extra = d.extra.filter((s) => s !== sku);
-    delete d.qty[sku];
-    this.save(d);
+    const qty = this.get();
+    qty[sku] = Math.max(0, n);
+    writeJSON(DRAFT_KEY, { qty });
   },
   clear() { writeJSON(DRAFT_KEY, {}); },
 };
 
-/** รายการในใบสั่ง = ที่ระบบแนะนำ + ที่เพิ่มเอง
- *  คืน [{ product, suggested, avg, daysLeft, extra, qty }] */
+/** รายการที่ต้องสั่ง (ระบบคำนวณ) พร้อมจำนวนที่จะสั่ง — คืน [{ product, suggested, avg, daysLeft, qty }] */
 function orderRows() {
-  const d = Draft.get();
-  const suggested = Forecast.toOrder();
-  const inList = new Set(suggested.map((r) => r.product.sku));
-  const all = Forecast.suggest();
-
-  const extras = d.extra
-    .filter((sku) => !inList.has(sku))
-    .map((sku) => all.find((r) => r.product.sku === sku))
-    .filter(Boolean)
-    .map((r) => ({ ...r, extra: true }));
-
-  return [...suggested, ...extras].map((r) => ({
+  const qty = Draft.get();
+  return Forecast.toOrder().map((r) => ({
     ...r,
-    qty: r.product.sku in d.qty ? d.qty[r.product.sku] : r.suggested,
+    qty: r.product.sku in qty ? qty[r.product.sku] : r.suggested,
   }));
 }
 
@@ -99,7 +70,7 @@ function renderHead() {
     <div class="cycle-bar"><span style="width:${Math.min(100, Math.max(0, (c.elapsed / c.cycleDays) * 100))}%"></span></div>`;
 }
 
-/* ---------- การ์ดสินค้า 1 ใบ (ใช้ทั้งโหมดสั่งและรับ) ---------- */
+/* ---------- ปุ่ม − จำนวน + ---------- */
 function stepperHTML(value, label) {
   return `
     <div class="order-qty">
@@ -132,13 +103,13 @@ function renderOrderMode() {
   const span = Forecast.historySpan();
   const remaining = Settings.cycleStatus().remaining;
 
-  el.listTitle.textContent = 'ใบสั่งของรอบนี้';
+  el.listTitle.textContent = 'ของที่ต้องสั่งรอบนี้';
   el.basisNote.hidden = false;
   el.basisNote.textContent = span
-    ? `ตัวเลขที่แนะนำ คิดจากยอดขาย ${span} วันที่ผ่านมา ให้พอขาย ${s.cycleDays} วัน (เผื่อ ${Math.round((s.safety - 1) * 100)}%) แก้ตัวเลขได้ตามต้องการ`
-    : 'ยังไม่มียอดขาย ระบบจึงแนะนำจาก "จุดสั่งซื้อ" ไปก่อน แก้ตัวเลขได้ตามต้องการ';
+    ? `ระบบคำนวณจากยอดขาย ${span} วันที่ผ่านมา ให้พอขาย ${s.cycleDays} วัน (เผื่อ ${Math.round((s.safety - 1) * 100)}%) ถ้าต้องการจำนวนอื่นกด − / + ได้`
+    : 'ยังไม่มียอดขาย ระบบจึงคำนวณจาก "จุดสั่งซื้อ" ไปก่อน ถ้าต้องการจำนวนอื่นกด − / + ได้';
 
-  el.orderEmpty.textContent = 'ยังไม่มีของที่ต้องสั่ง — กด "เพิ่มสินค้าในใบสั่ง" ถ้าอยากสั่งเพิ่ม';
+  el.orderEmpty.textContent = 'ยังไม่มีของที่ต้องสั่ง — ของในร้านพอขายถึงรอบหน้า';
   el.orderEmpty.hidden = rows.length > 0;
 
   el.orderList.innerHTML = '';
@@ -159,34 +130,29 @@ function renderOrderMode() {
           <p class="order-name">${p.name}</p>
           <p class="order-facts">${facts.join(' · ')}</p>
           ${r.avg > 0 ? `<p class="order-facts">ขายวันละประมาณ ${fmtAvg(r.avg)} ชิ้น</p>` : ''}
-          ${r.extra ? '<p class="order-tag">เพิ่มเอง</p>' : ''}
         </div>
       </div>
-      ${stepperHTML(r.qty, 'จำนวนที่จะสั่ง')}
-      ${r.extra ? '<button class="remove-btn" data-act="remove" type="button">เอาออกจากใบสั่ง</button>' : ''}`;
+      ${stepperHTML(r.qty, 'ต้องสั่ง')}`;
 
     bindStepper(li, (n) => {
       Draft.setQty(p.sku, n);
       li.classList.toggle('zero', n === 0);
       renderTotals();
     });
-    li.querySelector('[data-act="remove"]')?.addEventListener('click', () => {
-      Draft.removeExtra(p.sku);
-      renderOrderMode();
-    });
     el.orderList.appendChild(li);
   }
 
-  el.orderActions.innerHTML = `
-    <button class="add-btn" id="addItem" type="button">+ เพิ่มสินค้าในใบสั่ง</button>
-    <p class="order-total" id="orderTotal"></p>
-    <button class="line-btn" id="sendLine" type="button">ส่งรายการทาง LINE</button>
-    <button class="done-btn" id="placeOrder" type="button">สั่งของเรียบร้อยแล้ว</button>
-    <p class="hint-big center">กด "สั่งของเรียบร้อยแล้ว" เมื่อสั่งหรือไปรับของแล้ว<br>จากนั้นหน้านี้จะให้กรอกจำนวนที่ได้รับจริง</p>`;
-  $('addItem').addEventListener('click', openPicker);
-  $('sendLine').addEventListener('click', sendLine);
-  $('placeOrder').addEventListener('click', placeOrder);
-  renderTotals();
+  el.orderActions.innerHTML = rows.length
+    ? `<p class="order-total" id="orderTotal"></p>
+       <button class="line-btn" id="sendLine" type="button">ส่งรายการทาง LINE</button>
+       <button class="done-btn" id="placeOrder" type="button">สั่งของเรียบร้อยแล้ว</button>
+       <p class="hint-big center">กด "สั่งของเรียบร้อยแล้ว" เมื่อสั่งของแล้ว<br>ตอนไปรับของ หน้านี้จะให้ติ๊กของที่ได้รับ</p>`
+    : '';
+  if (rows.length) {
+    $('sendLine').addEventListener('click', sendLine);
+    $('placeOrder').addEventListener('click', placeOrder);
+    renderTotals();
+  }
 }
 
 function currentLines() {
@@ -224,104 +190,116 @@ function placeOrder() {
   toast('บันทึกแล้ว — ไปรับของได้เลย');
 }
 
-/* ---------- เลือกสินค้าเพิ่มในใบสั่ง ---------- */
-function openPicker() {
-  el.pickSearch.value = '';
-  renderPicker();
-  el.pickModal.hidden = false;
+/* ---------- โหมดที่ 2: รับของ (ติ๊กของที่ได้รับ) ---------- */
+/** สถานะการรับของที่กำลังติ๊ก — sku -> { checked, qty } (ยังไม่บันทึกจนกดยืนยัน) */
+const recv = new Map();
+
+function statusText(ordered, got) {
+  if (got === ordered) return `<span class="st ok">ได้ครบ ${got} ชิ้น</span>`;
+  if (got < ordered) return `<span class="st short">ได้ ${got} ชิ้น · ขาด ${ordered - got}</span>`;
+  return `<span class="st over">ได้ ${got} ชิ้น · เกิน ${got - ordered}</span>`;
 }
 
-function closePicker() {
-  el.pickModal.hidden = true;
-}
-
-function renderPicker() {
-  const inOrder = new Set(orderRows().map((r) => r.product.sku));
-  const q = el.pickSearch.value.trim().toLowerCase();
-  const list = Store.all()
-    .filter((p) => !inOrder.has(p.sku))
-    .filter((p) => !q || (p.name + ' ' + p.sku).toLowerCase().includes(q));
-
-  el.pickEmpty.textContent = q ? 'ไม่พบสินค้าที่ค้นหา' : 'สินค้าทุกชิ้นอยู่ในใบสั่งแล้ว';
-  el.pickEmpty.hidden = list.length > 0;
-  el.pickList.innerHTML = '';
-  for (const p of list) {
-    const li = document.createElement('li');
-    li.innerHTML = `
-      <button class="pick-item" type="button">
-        ${thumbHTML(p, 'order-thumb')}
-        <span class="pick-info">
-          <span class="order-name">${p.name}</span>
-          <span class="order-facts">เหลือ ${p.stock} ชิ้น</span>
-        </span>
-        <span class="pick-add">เพิ่ม</span>
-      </button>`;
-    li.querySelector('button').addEventListener('click', () => {
-      Draft.addExtra(p.sku);
-      closePicker();
-      renderOrderMode();
-      toast(`เพิ่ม ${p.name} ในใบสั่งแล้ว`);
-      el.orderList.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-    el.pickList.appendChild(li);
-  }
-}
-
-el.pickSearch.addEventListener('input', renderPicker);
-el.pickClose.addEventListener('click', closePicker);
-el.pickModal.addEventListener('click', (e) => { if (e.target === el.pickModal) closePicker(); });
-
-/* ---------- โหมดที่ 2: รับของเข้า ---------- */
 function renderReceiveMode(cycle) {
-  el.listTitle.textContent = `รับของ รอบที่ ${cycle.no}`;
+  for (const l of cycle.lines) {
+    if (!recv.has(l.sku)) recv.set(l.sku, { checked: false, qty: l.ordered });
+  }
+  const totalQty = cycle.lines.reduce((s, l) => s + l.ordered, 0);
+
+  el.listTitle.textContent = `ของที่ต้องไปรับ รอบที่ ${cycle.no}`;
   el.basisNote.hidden = false;
-  el.basisNote.textContent = 'ใส่จำนวนที่ได้รับ "จริง" — ถ้าของขาดหรือได้ไม่ครบ ให้แก้ตัวเลขตามจริง';
+  el.basisNote.innerHTML = `ต้องไปรับ <b>${cycle.lines.length}</b> รายการ · <b>${totalQty}</b> ชิ้น<br>
+    ได้ของแล้วติ๊กช่องหลังชื่อ — ถ้าจำนวนไม่ตรงกด "แก้จำนวน"`;
   el.orderEmpty.hidden = true;
 
   el.orderList.innerHTML = '';
   for (const l of cycle.lines) {
     const p = Store.find(l.sku) || { name: l.name, image: '' };
+    const st = recv.get(l.sku);
     const li = document.createElement('li');
-    li.className = 'order-card';
-    li.dataset.sku = l.sku;
+    li.className = 'order-card recv-card';
     li.innerHTML = `
-      <div class="order-top">
+      <label class="order-top recv-top">
         ${thumbHTML(p, 'order-thumb')}
-        <div class="order-info">
-          <p class="order-name">${l.name}</p>
-          <p class="order-facts">สั่งไป <b>${l.ordered}</b> ชิ้น</p>
-        </div>
-      </div>
-      ${stepperHTML(l.ordered, 'ได้รับจริง')}`;
-    bindStepper(li, () => {});
+        <span class="order-info">
+          <span class="order-name">${l.name}</span>
+          <span class="order-facts">ต้องรับ <b>${l.ordered}</b> ชิ้น</span>
+          <span class="recv-status"></span>
+        </span>
+        <input class="tick" type="checkbox" aria-label="ได้รับ ${l.name} แล้ว" />
+      </label>
+      <button class="edit-qty" type="button">แก้จำนวน</button>
+      <div class="recv-edit" hidden>${stepperHTML(st.qty, 'ได้มาจริง')}</div>`;
+
+    const tick = li.querySelector('.tick');
+    const edit = li.querySelector('.recv-edit');
+    const paint = () => {
+      tick.checked = st.checked;
+      li.classList.toggle('done', st.checked);
+      li.querySelector('.recv-status').innerHTML = st.checked
+        ? statusText(l.ordered, st.qty)
+        : '<span class="st wait">ยังไม่ได้รับ</span>';
+      renderRecvProgress(cycle);
+    };
+
+    tick.addEventListener('change', () => { st.checked = tick.checked; paint(); });
+    li.querySelector('.edit-qty').addEventListener('click', () => {
+      edit.hidden = !edit.hidden;
+      li.querySelector('.edit-qty').textContent = edit.hidden ? 'แก้จำนวน' : 'ซ่อน';
+    });
+    // แก้จำนวน = ได้ของแล้ว (ติ๊กให้อัตโนมัติ)
+    bindStepper(li, (n) => { st.qty = n; st.checked = true; paint(); });
+
     el.orderList.appendChild(li);
+    paint();
   }
 
   el.orderActions.innerHTML = `
-    <button class="done-btn primary" id="confirmReceive" type="button">ได้รับของแล้ว · เติมสต็อก</button>
-    <p class="hint-big center">สต็อกจะเพิ่มตามจำนวนที่ใส่ และเริ่มนับรอบใหม่ตั้งแต่วันนี้</p>
+    <p class="order-total" id="recvProgress"></p>
+    <button class="add-btn" id="tickAll" type="button">ได้ครบทุกรายการ (ติ๊กทั้งหมด)</button>
+    <button class="done-btn primary" id="confirmReceive" type="button">ยืนยันรับของ · เติมสต็อก</button>
+    <p class="hint-big center">สต็อกจะเพิ่มตามที่ติ๊กไว้ และเริ่มนับรอบใหม่ตั้งแต่วันนี้</p>
     <button class="remove-btn center" id="cancelOrder" type="button">ยกเลิกใบสั่งนี้</button>`;
+  renderRecvProgress(cycle);
+
+  $('tickAll').addEventListener('click', () => {
+    for (const st of recv.values()) st.checked = true;
+    renderReceiveMode(cycle);
+  });
 
   $('cancelOrder').addEventListener('click', () => {
     if (!confirm('ยกเลิกใบสั่งของรอบนี้? สต็อกจะไม่ถูกเติม')) return;
     Cycles.cancelOpen();
+    recv.clear();
     renderAll();
     toast('ยกเลิกใบสั่งแล้ว');
   });
 
   $('confirmReceive').addEventListener('click', () => {
     const received = {};
-    for (const li of el.orderList.querySelectorAll('.order-card')) {
-      received[li.dataset.sku] = Number(li.querySelector('.big-input').value) || 0;
+    let total = 0, missing = 0;
+    for (const l of cycle.lines) {
+      const st = recv.get(l.sku);
+      received[l.sku] = st.checked ? st.qty : 0;
+      total += received[l.sku];
+      if (!st.checked) missing++;
     }
-    const total = Object.values(received).reduce((s, v) => s + v, 0);
-    if (!confirm(`ยืนยันรับของ ${total} ชิ้น และเริ่มรอบใหม่ ${Settings.get().cycleDays} วันจากวันนี้?`)) return;
+    const warn = missing ? `\nยังไม่ได้ติ๊ก ${missing} รายการ — จะนับว่าไม่ได้รับ` : '';
+    if (!confirm(`ยืนยันรับของ ${total} ชิ้น และเริ่มรอบใหม่ ${Settings.get().cycleDays} วันจากวันนี้?${warn}`)) return;
 
     Cycles.receive(received);
+    recv.clear();
     renderAll();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     toast('เติมสต็อกแล้ว — เริ่มรอบใหม่');
   });
+}
+
+function renderRecvProgress(cycle) {
+  const t = $('recvProgress');
+  if (!t) return;
+  const done = cycle.lines.filter((l) => recv.get(l.sku)?.checked).length;
+  t.innerHTML = `ติ๊กแล้ว <b>${done}</b> จาก <b>${cycle.lines.length}</b> รายการ`;
 }
 
 /* ---------- ตั้งค่ารอบ ---------- */
@@ -356,25 +334,43 @@ el.daysInc.addEventListener('click', () => changeDays(1));
 el.safetyDec.addEventListener('click', () => changeSafety(-5));
 el.safetyInc.addEventListener('click', () => changeSafety(5));
 
-/* ---------- ประวัติรอบ ---------- */
+/* ---------- ของที่ต้องรับ vs รับจริง แต่ละรอบ ---------- */
+/** สถานะของ 1 รายการ: ครบ / ขาด / เกิน */
+function receiveStatus(ordered, received) {
+  if (received === ordered) return '<span class="st ok">ครบ</span>';
+  if (received < ordered) return `<span class="st short">ขาด ${ordered - received}</span>`;
+  return `<span class="st over">เกิน ${received - ordered}</span>`;
+}
+
 function renderHistory() {
-  const done = Cycles.all().filter((c) => c.receivedAt).reverse();
+  const done = Cycles.all().filter((c) => c.receivedAt).reverse();   // ล่าสุดก่อน
   el.historyEmpty.hidden = done.length > 0;
 
-  el.historyList.innerHTML = done.map((c) => {
+  el.historyList.innerHTML = done.map((c, i) => {
     const ordered = c.lines.reduce((s, l) => s + l.ordered, 0);
     const received = c.lines.reduce((s, l) => s + (l.received || 0), 0);
+    const short = c.lines.filter((l) => (l.received || 0) < l.ordered).length;
     return `
-      <li class="bill">
-        <details>
+      <li class="round">
+        <details ${i === 0 ? 'open' : ''}>
           <summary>
-            <span class="bill-time">รอบที่ ${c.no} · ${fmtDate(c.receivedAt)}</span>
-            <span class="bill-meta">${c.lines.length} รายการ</span>
-            <span class="bill-total">รับ ${received}/${ordered}</span>
+            <span class="round-title">รอบที่ ${c.no}</span>
+            <span class="round-date">สั่ง ${fmtDate(c.orderedAt)} · รับ ${fmtDate(c.receivedAt)}</span>
+            <span class="round-sum">ต้องรับ <b>${ordered}</b> · รับจริง <b>${received}</b> ชิ้น
+              ${short ? `<span class="st short">ขาด ${short} รายการ</span>` : '<span class="st ok">ครบทุกรายการ</span>'}</span>
           </summary>
-          <ul class="bill-items">
-            ${c.lines.map((l) => `<li><span>${l.name}</span><span>สั่ง ${l.ordered} · รับ ${l.received ?? 0}</span></li>`).join('')}
-          </ul>
+          <table class="round-table">
+            <thead><tr><th>สินค้า</th><th class="right">ต้องรับ</th><th class="right">รับจริง</th><th class="right"></th></tr></thead>
+            <tbody>
+              ${c.lines.map((l) => `
+                <tr>
+                  <td>${l.name}</td>
+                  <td class="right">${l.ordered}</td>
+                  <td class="right"><b>${l.received ?? 0}</b></td>
+                  <td class="right">${receiveStatus(l.ordered, l.received ?? 0)}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
         </details>
       </li>`;
   }).join('');
@@ -392,7 +388,7 @@ function renderAll() {
 
 renderAll();
 // กลับมาที่หน้านี้ (เช่น หลังส่ง LINE) ให้ดึงข้อมูลล่าสุด
-// ยกเว้นโหมดรับของ — ตัวเลขที่กรอกไว้ยังไม่ได้บันทึก จะหายถ้าวาดใหม่
+// ยกเว้นโหมดรับของ — ติ๊กที่ทำไว้ยังไม่ได้บันทึก จะหายถ้าวาดใหม่
 window.addEventListener('focus', () => {
   if (!Cycles.open()) renderAll();
 });
