@@ -37,7 +37,6 @@ function renderStats() {
     {
       label: 'รอบสั่งของ',
       value: cycle.remaining > 0 ? `อีก ${cycle.remaining} วัน` : 'ถึงรอบแล้ว',
-      sub: `วันที่ ${Math.max(cycle.elapsed, 0) + 1} ของรอบ ${cycle.cycleDays} วัน`,
       accent: cycle.remaining <= 3,
     },
   ];
@@ -46,7 +45,7 @@ function renderStats() {
     <div class="stat${t.accent ? ' accent' : ''}">
       <p class="stat-label">${t.label}</p>
       <p class="stat-value">${t.value}</p>
-      <p class="stat-sub">${t.sub}</p>
+      ${t.sub ? `<p class="stat-sub">${t.sub}</p>` : ''}
     </div>`).join('');
 }
 
