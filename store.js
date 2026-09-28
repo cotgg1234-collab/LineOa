@@ -1,19 +1,33 @@
 /* store.js — คลังข้อมูลสินค้า ใช้ร่วมกันระหว่างหน้าขาย (index.html) และหน้าจัดการสินค้า (products.html)
- * เก็บลง localStorage ของเบราว์เซอร์ ครั้งแรกจะโหลดชุดตัวอย่างให้อัตโนมัติ
+ * เก็บลง localStorage ของเบราว์เซอร์ เริ่มต้นเป็นรายการว่าง
  *
  * โครงสร้างสินค้า 1 รายการ:
- *   sku, name, cat, emoji, keywords, price
+ *   sku, name, cat, keywords, price
+ *   image   = รูปสินค้า (data URL แบบ JPEG ย่อแล้ว) — ไม่มีรูปจะแสดงกรอบว่างแทน
  *   stock   = จำนวนคงเหลือ (ตัดอัตโนมัติเมื่อปิดการขาย)
  *   reorder = จุดสั่งซื้อ — เหลือเท่านี้หรือน้อยกว่าถือว่า "ใกล้หมด"
  *   cost    = ต้นทุน ยังไม่ใช้งานและไม่มีช่องกรอก เก็บไว้เผื่ออนาคตเท่านั้น
  */
 
-const STORAGE_KEY = 'pos.products.v1';
+const STORAGE_KEY = 'pos.products.v2';
+
+// ล้างรายการสินค้าชุดเก่า (v1 = ชุดตัวอย่าง) ออกจากเครื่อง
+try { localStorage.removeItem('pos.products.v1'); } catch { /* ไม่มี localStorage */ }
 
 /** ค่าเริ่มต้นของฟิลด์ที่เพิ่มทีหลัง — ใช้เติมให้ข้อมูลเก่าที่บันทึกไว้ก่อนมีสต็อก */
-const PRODUCT_DEFAULTS = { stock: 0, reorder: 3, cost: 0 };
+const PRODUCT_DEFAULTS = { stock: 0, reorder: 3, cost: 0, cat: 'ทั่วไป', image: '', keywords: '' };
+const SKU_SEQ_KEY = 'pos.skuSeq.v1';   // เลขรหัสล่าสุดที่เคยออก — ไม่นำรหัสของสินค้าที่ลบแล้วกลับมาใช้ซ้ำ (QR เก่าจะได้ไม่ชี้ไปสินค้าใหม่)
 
-function normalize(p) {
+const NO_PHOTO_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>';
+
+/** รูปย่อสินค้า: มีรูปใช้รูป ไม่มีใช้กรอบรูปว่าง */
+function thumbHTML(p, cls = 'thumb') {
+  return p.image
+    ? `<img class="${cls}" src="${p.image}" alt="" />`
+    : `<span class="${cls} thumb-empty">${NO_PHOTO_SVG}</span>`;
+}
+
+function normalize({ emoji, ...p }) {
   return {
     ...PRODUCT_DEFAULTS,
     ...p,
@@ -23,51 +37,27 @@ function normalize(p) {
   };
 }
 
-const DEFAULT_PRODUCTS = [
-  { sku: 'A01', name: 'ข้าวสารหอมมะลิ 5 กก.', price: 189, cat: 'ของแห้ง', emoji: '🍚', keywords: 'khao rice ข้าว', stock: 8, reorder: 3 },
-  { sku: 'A02', name: 'บะหมี่กึ่งสำเร็จรูป', price: 7, cat: 'ของแห้ง', emoji: '🍜', keywords: 'mama noodle มาม่า', stock: 64, reorder: 12 },
-  { sku: 'A03', name: 'ไข่ไก่ เบอร์ 2 (10 ฟอง)', price: 62, cat: 'ของสด', emoji: '🥚', keywords: 'egg ไข่', stock: 4, reorder: 6 },
-  { sku: 'A04', name: 'นมสด 1 ลิตร', price: 58, cat: 'ของสด', emoji: '🥛', keywords: 'milk นม', stock: 9, reorder: 4 },
-  { sku: 'A05', name: 'น้ำเปล่า 600 มล.', price: 7, cat: 'เครื่องดื่ม', emoji: '💧', keywords: 'water น้ำ', stock: 48, reorder: 12 },
-  { sku: 'A06', name: 'น้ำอัดลม กระป๋อง', price: 15, cat: 'เครื่องดื่ม', emoji: '🥤', keywords: 'coke soda โค้ก', stock: 30, reorder: 8 },
-  { sku: 'A07', name: 'กาแฟกระป๋อง', price: 20, cat: 'เครื่องดื่ม', emoji: '☕', keywords: 'coffee กาแฟ', stock: 12, reorder: 4 },
-  { sku: 'A08', name: 'ขนมปังแผ่น', price: 35, cat: 'เบเกอรี่', emoji: '🍞', keywords: 'bread ขนมปัง', stock: 6, reorder: 3 },
-  { sku: 'A09', name: 'มันฝรั่งทอดกรอบ', price: 25, cat: 'ขนม', emoji: '🥔', keywords: 'chips เลย์ ขนม', stock: 18, reorder: 5 },
-  { sku: 'A10', name: 'ช็อกโกแลตแท่ง', price: 30, cat: 'ขนม', emoji: '🍫', keywords: 'chocolate ช็อค', stock: 14, reorder: 5 },
-  { sku: 'A11', name: 'ไอศกรีมถ้วย', price: 22, cat: 'ขนม', emoji: '🍨', keywords: 'ice cream ไอติม', stock: 2, reorder: 4 },
-  { sku: 'A12', name: 'กล้วยหอม (หวี)', price: 45, cat: 'ของสด', emoji: '🍌', keywords: 'banana กล้วย', stock: 5, reorder: 2 },
-  { sku: 'A13', name: 'ไก่ทอด (ชิ้น)', price: 25, cat: 'อาหารพร้อมทาน', emoji: '🍗', keywords: 'chicken ไก่', stock: 10, reorder: 4 },
-  { sku: 'A14', name: 'ข้าวกล่องพร้อมทาน', price: 49, cat: 'อาหารพร้อมทาน', emoji: '🍱', keywords: 'bento ข้าวกล่อง', stock: 7, reorder: 3 },
-  { sku: 'A15', name: 'ลูกชิ้นปิ้ง (ไม้)', price: 12, cat: 'อาหารพร้อมทาน', emoji: '🍢', keywords: 'ลูกชิ้น meatball', stock: 25, reorder: 8 },
-  { sku: 'A16', name: 'สบู่ก้อน', price: 18, cat: 'ของใช้', emoji: '🧼', keywords: 'soap สบู่', stock: 16, reorder: 4 },
-  { sku: 'A17', name: 'ยาสีฟัน', price: 45, cat: 'ของใช้', emoji: '🪥', keywords: 'toothpaste ยาสีฟัน', stock: 9, reorder: 3 },
-  { sku: 'A18', name: 'กระดาษทิชชู่', price: 32, cat: 'ของใช้', emoji: '🧻', keywords: 'tissue ทิชชู', stock: 11, reorder: 4 },
-  { sku: 'A19', name: 'ถ่านไฟฉาย AA (แพ็ค)', price: 55, cat: 'ของใช้', emoji: '🔋', keywords: 'battery ถ่าน', stock: 1, reorder: 3 },
-  { sku: 'A20', name: 'น้ำมันพืช 1 ลิตร', price: 68, cat: 'ของแห้ง', emoji: '🛢️', keywords: 'oil น้ำมัน', stock: 13, reorder: 4 },
-];
-
 const Store = {
   /** อ่านรายการสินค้าทั้งหมด */
   all() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        this.saveAll(DEFAULT_PRODUCTS.map(normalize));
-        return DEFAULT_PRODUCTS.map(normalize);
-      }
+      if (!raw) return [];
       const list = JSON.parse(raw);
-      if (!Array.isArray(list)) return DEFAULT_PRODUCTS.map(normalize);
+      if (!Array.isArray(list)) return [];
       return list.map(normalize);     // เติมฟิลด์ใหม่ให้ข้อมูลเก่าอัตโนมัติ
     } catch {
-      return DEFAULT_PRODUCTS.map(normalize);   // localStorage ถูกปิด หรือข้อมูลเสีย
+      return [];   // localStorage ถูกปิด หรือข้อมูลเสีย
     }
   },
 
+  /** บันทึกทั้งหมด — คืน false ถ้าบันทึกไม่ได้ (พื้นที่เต็ม หรือ private mode) */
   saveAll(list) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      return true;
     } catch {
-      /* โหมดไม่บันทึก (private mode) — ใช้งานต่อได้ในหน้านี้ */
+      return false;
     }
   },
 
@@ -81,7 +71,7 @@ const Store = {
       .map((p) => /^A(\d+)$/.exec(p.sku))
       .filter(Boolean)
       .map((m) => Number(m[1]));
-    const next = nums.length ? Math.max(...nums) + 1 : 1;
+    const next = Math.max(0, ...nums, Number(readJSON(SKU_SEQ_KEY, 0)) || 0) + 1;
     return 'A' + String(next).padStart(2, '0');
   },
 
@@ -92,7 +82,9 @@ const Store = {
       return { ok: false, error: `รหัส ${p.sku} ถูกใช้ไปแล้ว` };
     }
     list.push(normalize(p));
-    this.saveAll(list);
+    if (!this.saveAll(list)) return { ok: false, error: 'บันทึกไม่ได้ — พื้นที่เก็บข้อมูลในเครื่องเต็ม ลองลบรูป/สินค้าที่ไม่ใช้' };
+    const m = /^A(\d+)$/.exec(p.sku);
+    if (m) writeJSON(SKU_SEQ_KEY, Math.max(Number(m[1]), Number(readJSON(SKU_SEQ_KEY, 0)) || 0));
     return { ok: true };
   },
 
@@ -105,7 +97,7 @@ const Store = {
       return { ok: false, error: `รหัส ${p.sku} ถูกใช้ไปแล้ว` };
     }
     list[i] = normalize(p);
-    this.saveAll(list);
+    if (!this.saveAll(list)) return { ok: false, error: 'บันทึกไม่ได้ — พื้นที่เก็บข้อมูลในเครื่องเต็ม ลองลบรูป/สินค้าที่ไม่ใช้' };
     return { ok: true };
   },
 
@@ -145,9 +137,9 @@ const Store = {
     return [...new Set(this.all().map((p) => p.cat))];
   },
 
-  /** คืนค่าชุดตัวอย่างเริ่มต้น (ลบของที่เพิ่มเองทั้งหมด) */
+  /** ลบสินค้าทั้งหมด */
   reset() {
-    this.saveAll(DEFAULT_PRODUCTS.map(normalize));
+    this.saveAll([]);
   },
 };
 
@@ -155,9 +147,20 @@ const Store = {
  * ประวัติการขาย / ตั้งค่ารอบ / รอบสั่งของ
  * ========================================================================= */
 
-const SALES_KEY = 'pos.sales.v1';
+const SALES_KEY = 'pos.sales.v2';
 const SETTINGS_KEY = 'pos.settings.v1';
-const CYCLES_KEY = 'pos.cycles.v1';
+const CYCLES_KEY = 'pos.cycles.v2';
+
+// ล้างประวัติขาย/รอบสั่งของชุดเก่า (v1 อ้างรหัสสินค้าตัวอย่างที่ลบไปแล้ว) และเริ่มนับรอบใหม่ — ทำครั้งเดียวต่อเครื่อง
+try {
+  if (localStorage.getItem('pos.sales.v1') !== null || localStorage.getItem('pos.cycles.v1') !== null) {
+    localStorage.removeItem('pos.sales.v1');
+    localStorage.removeItem('pos.cycles.v1');
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    delete s.lastReceivedAt;
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  }
+} catch { /* ไม่มี localStorage */ }
 
 function readJSON(key, fallback) {
   try {

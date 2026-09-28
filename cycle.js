@@ -36,7 +36,7 @@ function renderHead() {
 
   if (open) {
     el.cycleHead.innerHTML = `
-      <p class="cycle-state">🚚 สั่งของรอบที่ ${open.no} แล้ว</p>
+      <p class="cycle-state">สั่งของรอบที่ ${open.no} แล้ว</p>
       <p class="cycle-big">รอไปรับของ</p>
       <p class="cycle-sub">สั่งเมื่อ ${fmtDate(open.orderedAt)} · ${open.lines.length} รายการ
         — ไปรับแล้วกรอกจำนวนที่ได้จริงด้านล่าง</p>`;
@@ -45,7 +45,7 @@ function renderHead() {
 
   const late = c.remaining <= 0;
   el.cycleHead.innerHTML = `
-    <p class="cycle-state">${late ? '🔔 ถึงรอบสั่งของแล้ว' : '🛒 กำลังขาย'}</p>
+    <p class="cycle-state">${late ? 'ถึงรอบสั่งของแล้ว' : 'กำลังขาย'}</p>
     <p class="cycle-big ${late ? 'due' : ''}">${late ? `เลยกำหนดมา ${Math.abs(c.remaining)} วัน` : `อีก ${c.remaining} วันถึงรอบสั่ง`}</p>
     <p class="cycle-sub">วันที่ ${Math.max(c.elapsed, 0) + 1} ของรอบ ${c.cycleDays} วัน ·
       เริ่มรอบ ${fmtDate(c.start)} · ครบรอบ ${fmtDate(c.due)}</p>
@@ -72,7 +72,7 @@ function renderOrderMode() {
       <th class="right">ควรสั่ง</th>
     </tr>`;
 
-  el.orderEmpty.textContent = 'ยังไม่มีอะไรต้องสั่ง — ของในร้านพอถึงรอบหน้า 👍';
+  el.orderEmpty.textContent = 'ยังไม่มีอะไรต้องสั่ง — ของในร้านพอถึงรอบหน้า';
   el.orderEmpty.hidden = rows.length > 0;
 
   el.orderBody.innerHTML = rows.map((r) => {
@@ -81,7 +81,7 @@ function renderOrderMode() {
     const urgent = r.daysLeft < Settings.cycleStatus().remaining;
     return `
       <tr data-sku="${p.sku}">
-        <td>${p.emoji} ${p.name}<br><span class="td-sku">${p.sku} · ${p.cat}</span></td>
+        <td>${thumbHTML(p, 'mini-thumb')}${p.name}<br><span class="td-sku">${p.sku} · ${p.cat}</span></td>
         <td class="right"><b class="${p.stock <= 0 ? 'out' : ''}">${p.stock}</b></td>
         <td class="right">${r.avg > 0 ? n1(r.avg) : '—'}</td>
         <td class="right ${urgent ? 'out' : ''}">${Number.isFinite(r.daysLeft) ? Math.max(0, Math.floor(r.daysLeft)) + ' วัน' : '—'}</td>
@@ -114,13 +114,13 @@ function renderOrderMode() {
   }
 
   el.listTools.innerHTML = rows.length
-    ? '<button class="mini-btn" id="copyOrder" type="button">📋 คัดลอกรายการ</button>'
+    ? '<button class="mini-btn" id="copyOrder" type="button">คัดลอกรายการ</button>'
     : '';
   if (rows.length) $('copyOrder').addEventListener('click', copyOrder);
 
   el.orderActions.innerHTML = rows.length
     ? `<p class="order-total" id="orderTotal"></p>
-       <button class="pay-btn" id="placeOrder" type="button">สั่งของรอบนี้แล้ว →</button>
+       <button class="pay-btn" id="placeOrder" type="button">สั่งของรอบนี้แล้ว</button>
        <p class="hint center">กดเมื่อสั่ง/ออกไปรับของแล้ว ระบบจะเปลี่ยนเป็นโหมดรับของ</p>`
     : '';
   if (rows.length) {
@@ -211,7 +211,7 @@ function renderReceiveMode(cycle) {
   });
 
   el.orderActions.innerHTML = `
-    <button class="pay-btn" id="confirmReceive" type="button">✓ ยืนยันรับของ · เติมสต็อก</button>
+    <button class="pay-btn" id="confirmReceive" type="button">ยืนยันรับของ · เติมสต็อก</button>
     <p class="hint center">ยืนยันแล้วสต็อกจะเพิ่มตามจำนวนที่กรอก และเริ่มนับรอบใหม่จากวันนี้</p>`;
 
   $('confirmReceive').addEventListener('click', () => {

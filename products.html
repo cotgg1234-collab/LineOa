@@ -7,12 +7,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css?v=8" />
+<link rel="stylesheet" href="styles.css?v=12" />
 </head>
 <body>
 <header class="topbar">
   <div class="brand">
-    <span class="logo">📦</span>
     <div>
       <h1>จัดการสินค้า</h1>
       <p class="sub">เพิ่ม / แก้ไข / ลบ รายการสินค้าในร้าน</p>
@@ -20,10 +19,10 @@
   </div>
 
   <nav class="nav">
-    <a class="nav-link" href="index.html">🛒 ขาย</a>
-    <a class="nav-link" href="cycle.html">🔄 รอบสั่งของ</a>
-    <a class="nav-link" href="sales.html">📊 ยอดขาย</a>
-    <a class="nav-link active" href="products.html">📦 สินค้า</a>
+    <a class="nav-link" href="index.html">ขาย</a>
+    <a class="nav-link" href="cycle.html">รอบสั่งของ</a>
+    <a class="nav-link" href="sales.html">ยอดขาย</a>
+    <a class="nav-link active" href="products.html">สินค้า</a>
   </nav>
 </header>
 
@@ -35,6 +34,15 @@
     <form id="productForm" novalidate>
       <input type="hidden" id="originalSku" />
 
+      <div class="photo-field">
+        <label class="photo-pick" for="fImage" id="photoPick">
+          <img id="photoPreview" alt="" hidden />
+          <span class="photo-empty" id="photoEmpty"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><small>แตะเพื่อถ่าย / เลือกรูป</small></span>
+        </label>
+        <input id="fImage" type="file" accept="image/*" hidden />
+        <button type="button" class="link-btn" id="photoRemove" hidden>ลบรูป</button>
+      </div>
+
       <div class="field">
         <label for="fName">ชื่อสินค้า <span class="req">*</span></label>
         <input id="fName" type="text" placeholder="เช่น น้ำส้มคั้น 350 มล." required />
@@ -43,62 +51,37 @@
       <div class="field-row">
         <div class="field">
           <label for="fPrice">ราคา (บาท) <span class="req">*</span></label>
-          <input id="fPrice" type="number" min="0" step="1" placeholder="25" required />
+          <input id="fPrice" type="number" inputmode="decimal" min="0" step="1" placeholder="25" required />
         </div>
         <div class="field">
-          <label for="fSku">รหัสสินค้า</label>
-          <input id="fSku" type="text" placeholder="เว้นว่าง = สร้างให้อัตโนมัติ" />
+          <label for="fStock">จำนวน</label>
+          <input id="fStock" type="number" inputmode="numeric" min="0" step="1" placeholder="0" />
         </div>
       </div>
 
-      <div class="field-row">
-        <div class="field">
-          <label for="fCat">หมวดหมู่ <span class="req">*</span></label>
-          <input id="fCat" type="text" list="catList" placeholder="เช่น เครื่องดื่ม" required />
-          <datalist id="catList"></datalist>
+      <details class="more">
+        <summary>ตั้งค่าเพิ่มเติม</summary>
+        <div class="field-row">
+          <div class="field">
+            <label for="fCat">หมวดหมู่</label>
+            <input id="fCat" type="text" list="catList" placeholder="ทั่วไป" />
+            <datalist id="catList"></datalist>
+          </div>
+          <div class="field">
+            <label for="fReorder">จุดสั่งซื้อ</label>
+            <input id="fReorder" type="number" min="0" step="1" placeholder="3" />
+            <span class="hint">เหลือเท่านี้หรือน้อยกว่า = ใกล้หมด</span>
+          </div>
         </div>
-        <div class="field">
-          <label for="fEmoji">ไอคอน (อีโมจิ)</label>
-          <input id="fEmoji" type="text" maxlength="4" placeholder="🥤" />
-        </div>
-      </div>
-
-      <div class="field-row">
-        <div class="field">
-          <label for="fStock">จำนวนคงเหลือ</label>
-          <input id="fStock" type="number" step="1" placeholder="0" />
-        </div>
-        <div class="field">
-          <label for="fReorder">จุดสั่งซื้อ</label>
-          <input id="fReorder" type="number" min="0" step="1" placeholder="3" />
-          <span class="hint">เหลือเท่านี้หรือน้อยกว่า = ใกล้หมด</span>
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="fKeywords">คำค้นหาเพิ่มเติม</label>
-        <input id="fKeywords" type="text" placeholder="เช่น orange juice น้ำส้ม (คั่นด้วยเว้นวรรค)" />
-      </div>
-
-      <div class="emoji-pick" id="emojiPick" aria-label="เลือกไอคอนอย่างเร็ว"></div>
+      </details>
 
       <p class="form-error" id="formError" hidden></p>
 
       <div class="form-actions">
-        <button type="submit" class="pay-btn" id="submitBtn">บันทึกสินค้า</button>
+        <button type="submit" class="pay-btn" id="submitBtn">เพิ่มสินค้า</button>
         <button type="button" class="ghost-btn" id="cancelEdit" hidden>ยกเลิกการแก้ไข</button>
       </div>
     </form>
-
-    <div class="preview-box">
-      <p class="preview-label">ตัวอย่างการ์ดในหน้าขาย</p>
-      <div class="card preview-card" id="previewCard">
-        <span class="emoji">📦</span>
-        <span class="name">ชื่อสินค้า</span>
-        <span class="price">฿0</span>
-        <span class="sku">—</span>
-      </div>
-    </div>
   </section>
 
   <!-- ตารางรายการสินค้า -->
@@ -106,10 +89,11 @@
     <div class="list-head">
       <h2>รายการสินค้า <span class="count" id="count">0</span></h2>
       <div class="list-tools">
-        <input id="filter" type="search" class="filter-input" placeholder="🔍 กรองรายการ…" autocomplete="off" />
-        <button class="mini-btn" id="lowOnly" type="button" aria-pressed="false">🔔 เฉพาะใกล้หมด</button>
-        <button class="mini-btn" id="fillStock" type="button">📥 เติมสต็อกทั้งหมด</button>
-        <button class="link-btn" id="resetStore" type="button">คืนค่าชุดตัวอย่าง</button>
+        <input id="filter" type="search" class="filter-input" placeholder="กรองรายการ…" autocomplete="off" />
+        <button class="mini-btn" id="lowOnly" type="button" aria-pressed="false">เฉพาะใกล้หมด</button>
+        <button class="mini-btn" id="fillStock" type="button">เติมสต็อกทั้งหมด</button>
+        <button class="mini-btn" id="printAll" type="button">พิมพ์ QR ทั้งหมด</button>
+        <button class="link-btn" id="resetStore" type="button">ล้างสินค้าทั้งหมด</button>
       </div>
     </div>
 
@@ -117,12 +101,12 @@
       <table class="table">
         <thead>
           <tr>
-            <th>ไอคอน</th><th>รหัส</th><th>ชื่อสินค้า</th><th>หมวดหมู่</th><th class="right">ราคา</th><th class="right">คงเหลือ</th><th></th>
+            <th>รูป</th><th>รหัส</th><th>ชื่อสินค้า</th><th class="right">ราคา</th><th class="right">คงเหลือ</th><th></th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
       </table>
-      <p class="empty" id="listEmpty" hidden>ยังไม่มีสินค้า</p>
+      <p class="empty" id="listEmpty" hidden>ยังไม่มีสินค้า — เพิ่มจากฟอร์มด้านบน</p>
     </div>
   </section>
 </main>
@@ -130,18 +114,22 @@
 <!-- QR ของสินค้า (ติดที่สินค้า/ชั้นวาง เพื่อสแกนขาย) -->
 <div class="modal" id="qrModal" hidden>
   <div class="modal-card qr-card" role="dialog" aria-modal="true" aria-labelledby="qrName">
+    <p class="qr-added" id="qrAdded" hidden>เพิ่มสินค้าแล้ว</p>
     <div class="qr-box" id="qrBox"></div>
     <h2 id="qrName">ชื่อสินค้า</h2>
     <p class="qr-sub" id="qrSub"></p>
-    <button class="pay-btn" id="qrPrint" type="button">🖨 พิมพ์ QR</button>
+    <button class="pay-btn" id="qrPrint" type="button">พิมพ์ QR</button>
     <button class="ghost-btn" id="qrClose" type="button">ปิด</button>
   </div>
 </div>
 
+<!-- พื้นที่สำหรับพิมพ์ (ซ่อนบนจอ) -->
+<div id="printArea" class="print-area" aria-hidden="true"></div>
+
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="store.js?v=8"></script>
-<script src="products.js?v=8"></script>
+<script src="store.js?v=12"></script>
+<script src="products.js?v=12"></script>
 </body>
 </html>

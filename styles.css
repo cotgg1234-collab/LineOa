@@ -45,7 +45,6 @@ body {
 
 .brand { display: flex; align-items: center; gap: 12px; flex: 0 1 auto; min-width: 0; }
 .brand h1, .brand .sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.logo { font-size: 34px; }
 .brand h1 { margin: 0; font-size: 20px; }
 .sub { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
 
@@ -60,8 +59,8 @@ body {
   position: absolute;
   left: 16px; top: 50%;
   transform: translateY(-50%);
-  font-size: 18px;
-  opacity: .6;
+  display: flex;
+  color: var(--muted);
   pointer-events: none;
 }
 
@@ -169,7 +168,6 @@ body {
 .card:active { transform: scale(.97); }
 .card:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
 
-.card .emoji { font-size: 48px; line-height: 1; }
 .card .name { font-size: 15px; font-weight: 500; overflow-wrap: anywhere; }
 .card .price { font-size: 19px; font-weight: 700; color: var(--brand-dark); }
 .card .sku { font-size: 11px; color: var(--muted); }
@@ -345,7 +343,6 @@ body {
   text-align: left;
   transition: all .12s;
 }
-.method span { font-size: 24px; }
 .method:hover { border-color: var(--brand); background: #f3fdf7; }
 
 .ghost-btn {
@@ -435,11 +432,10 @@ body {
 /* ---------- เลือกจำนวน (แถบเลื่อน) ---------- */
 .qty-card { text-align: left; --slide: #3dbea9; }
 .qty-product { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
-.qty-emoji {
+.qty-thumb-box {
   flex: 0 0 auto;
   width: 60px; height: 60px;
   display: grid; place-items: center;
-  font-size: 34px;
   border-radius: 14px;
   background: var(--bg);
 }
@@ -515,13 +511,74 @@ body {
 .qr-box svg { display: block; width: 100%; height: auto; }
 .qr-sub { margin: 0 0 6px; color: var(--muted); }
 
-/* พิมพ์เฉพาะ QR ที่เปิดอยู่ */
+.qr-added { margin: 0 0 10px; color: var(--brand-dark); font-weight: 700; font-size: 17px; }
+
+/* พิมพ์ QR: แสดงเฉพาะ #printArea เป็นแผ่นสติกเกอร์ 3 ดวงต่อแถว */
+.print-area { display: none; }
 @media print {
-  body:has(#qrModal:not([hidden])) > *:not(#qrModal) { display: none !important; }
-  #qrModal { position: static; background: none; padding: 0; }
-  #qrModal .qr-card { box-shadow: none; animation: none; }
-  #qrModal button { display: none; }
+  @page { margin: 10mm; }
+  body > *:not(#printArea) { display: none !important; }
+  body { display: block; background: #fff; }
+  .print-area {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6mm;
+  }
+  .label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2mm;
+    padding: 4mm;
+    border: 1px dashed #999;
+    text-align: center;
+    break-inside: avoid;
+  }
+  .label svg { width: 38mm; height: 38mm; }
+  .label b { font-size: 11pt; line-height: 1.25; }
+  .label span { font-size: 10pt; color: #333; }
 }
+
+/* ---------- รูปสินค้า ---------- */
+.card-thumb, .row-thumb, .qty-thumb, .mini-thumb { object-fit: cover; display: block; }
+.thumb-empty { display: grid; place-items: center; background: var(--bg); color: #b5c0cc; }
+.thumb-empty svg { width: 55%; height: 55%; }
+
+.photo-field { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 14px; }
+.photo-pick {
+  width: 132px; height: 132px;
+  border: 2px dashed var(--line);
+  border-radius: 18px;
+  background: #fafbfc;
+  overflow: hidden;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: border-color .15s;
+}
+.photo-pick:hover { border-color: var(--brand); }
+.photo-pick img { width: 100%; height: 100%; object-fit: cover; }
+.photo-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); }
+.photo-empty small { font-size: 12px; }
+
+details.more { margin: 0 0 14px; }
+details.more summary {
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--muted);
+  padding: 4px 0 10px;
+}
+details.more[open] summary { color: var(--ink); }
+
+.row-thumb { width: 44px; height: 44px; border-radius: 10px; }
+.td-thumb { width: 60px; }
+.td-name { min-width: 120px; }
+.td-cat { font-size: 12px; color: var(--muted); }
+
+.card-thumb { width: 76px; height: 76px; border-radius: 12px; }
+.qty-thumb-box { overflow: hidden; }
+.qty-thumb { width: 100%; height: 100%; }
+.mini-thumb { display: inline-grid; width: 28px; height: 28px; border-radius: 6px; vertical-align: middle; margin-right: 6px; }
 
 /* ---------- Toast ---------- */
 .toast {
@@ -611,22 +668,6 @@ body {
 
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-.emoji-pick {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 14px;
-}
-.emoji-btn {
-  width: 38px; height: 38px;
-  font-size: 20px;
-  line-height: 1;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
-  cursor: pointer;
-}
-.emoji-btn:hover { border-color: var(--brand); background: #f3fdf7; }
 
 .form-error {
   margin: 0 0 12px;
@@ -656,7 +697,8 @@ body {
 }
 .list-head h2 { margin: 0; }
 .count { font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 6px; }
-.list-tools { display: flex; align-items: center; gap: 12px; }
+.list-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.list-tools .mini-btn { margin-left: 0; white-space: nowrap; }
 
 .filter-input {
   min-width: 0;
@@ -687,7 +729,6 @@ body {
 .table tr:hover td { background: #f8fbf9; }
 .table .right { text-align: right; }
 .nowrap { white-space: nowrap; }
-.td-emoji { font-size: 22px; }
 .td-sku { color: var(--muted); font-size: 13px; }
 .td-price { font-weight: 700; color: var(--brand-dark); }
 
@@ -774,7 +815,6 @@ body {
     gap: 10px;
     padding: 10px 14px;
   }
-  .logo { font-size: 26px; }
   .brand h1 { font-size: 16px; }
   .sub { display: none; }
   .search-wrap { order: 3; flex: 1 1 180px; max-width: none; }
@@ -789,6 +829,8 @@ body {
   .nav-link { padding: 8px 12px; font-size: 13px; }
 
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .list-tools { width: 100%; }
+  .list-tools .filter-input { flex: 1 1 100%; }
   .panel { padding: 14px; }
   .field-row { gap: 10px; }
 
@@ -806,7 +848,7 @@ body {
   /* การ์ด 3 ชิ้นต่อแถวเหมือนเดิม แต่กระชับขึ้น */
   .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
   .card { padding: 12px 5px 10px; gap: 5px; min-width: 0; }
-  .card .emoji { font-size: 32px; }
+  .card .card-thumb { width: 58px; height: 58px; }
   .card .name { font-size: 12px; line-height: 1.35; }
   .card .price { font-size: 15px; }
   .card .sku { font-size: 10px; }

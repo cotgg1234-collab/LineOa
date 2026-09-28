@@ -28,7 +28,7 @@ const el = {
   toast: $('toast'),
   scanBtn: $('scanBtn'), scanMore: $('scanMore'),
   scanModal: $('scanModal'), scanError: $('scanError'), cancelScan: $('cancelScan'),
-  qtyModal: $('qtyModal'), qtyEmoji: $('qtyEmoji'), qtyName: $('qtyName'), qtyMeta: $('qtyMeta'),
+  qtyModal: $('qtyModal'), qtyThumb: $('qtyThumb'), qtyName: $('qtyName'), qtyMeta: $('qtyMeta'),
   qtyValue: $('qtyValue'), qtyRange: $('qtyRange'), qtyDec: $('qtyDec'), qtyInc: $('qtyInc'),
   qtyMin: $('qtyMin'), qtyMax: $('qtyMax'), qtySum: $('qtySum'),
   qtyConfirm: $('qtyConfirm'), qtyCancel: $('qtyCancel'),
@@ -72,6 +72,7 @@ function renderGrid() {
   visible = PRODUCTS.filter(matches);
   el.grid.innerHTML = '';
   el.empty.hidden = visible.length > 0;
+  el.empty.textContent = PRODUCTS.length ? 'ไม่พบสินค้าที่ตรงกับคำค้นหา' : 'ยังไม่มีสินค้า — เพิ่มสินค้าได้ที่หน้าสินค้า';
 
   for (const p of visible) {
     const inCart = cart.get(p.sku);
@@ -82,7 +83,7 @@ function renderGrid() {
     card.disabled = p.stock <= 0;
     card.innerHTML = `
       ${inCart ? `<span class="badge">${inCart.qty}</span>` : ''}
-      <span class="emoji">${p.emoji}</span>
+      ${thumbHTML(p, 'card-thumb')}
       <span class="name">${p.name}</span>
       <span class="price">${baht(p.price)}</span>
       <span class="sku">${p.sku} · ${p.cat}</span>
@@ -164,7 +165,7 @@ function renderCart() {
         <button type="button" data-act="dec" title="ลด">−</button>
         <span class="n">${qty}</span>
         <button type="button" data-act="inc" title="เพิ่ม">+</button>
-        <button type="button" data-act="del" title="ลบออก">🗑</button>
+        <button type="button" data-act="del" title="ลบออก">ลบ</button>
       </span>`;
     li.querySelector('[data-act="dec"]').addEventListener('click', () => setQty(p.sku, qty - 1));
     li.querySelector('[data-act="inc"]').addEventListener('click', () => setQty(p.sku, qty + 1));
@@ -257,7 +258,7 @@ function openQty(p) {
   if (left <= 0) { toast(`${p.name} อยู่ในตะกร้าครบ ${p.stock} ชิ้นแล้ว`); return; }
 
   qtyProduct = p;
-  el.qtyEmoji.textContent = p.emoji || '📦';
+  el.qtyThumb.innerHTML = thumbHTML(p, 'qty-thumb');
   el.qtyName.textContent = p.name;
   el.qtyMeta.textContent = `${baht(p.price)} / ชิ้น · คงเหลือ ${p.stock}` + (inCart ? ` · ในตะกร้า ${inCart}` : '');
   el.qtyRange.max = left;
