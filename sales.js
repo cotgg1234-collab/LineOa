@@ -6,7 +6,6 @@ const el = {
   rangePick: $('rangePick'),
   topBody: $('topBody'), topEmpty: $('topEmpty'),
   billList: $('billList'), billEmpty: $('billEmpty'),
-  undoBill: $('undoBill'),
   toast: $('toast'),
 };
 
@@ -93,7 +92,6 @@ function renderTop() {
 function renderBills() {
   const bills = Sales.lastDays(days).slice().reverse().slice(0, 30);
   el.billEmpty.hidden = bills.length > 0;
-  el.undoBill.disabled = Sales.all().length === 0;
 
   el.billList.innerHTML = bills.map((b) => `
     <li class="bill">
@@ -119,16 +117,6 @@ el.rangePick.addEventListener('click', (e) => {
   renderAll();
 });
 
-el.undoBill.addEventListener('click', () => {
-  const last = Sales.all().at(-1);
-  if (!last) return;
-  if (!confirm(`ยกเลิกบิล ${dateOf(last.soldAt)} ${timeOf(last.soldAt)} ยอด ${baht(last.total)}?\nสต็อกจะถูกคืนกลับเข้าระบบ`)) return;
-
-  Sales.removeLast();
-  for (const i of last.items) Store.adjustStock(i.sku, i.qty);   // คืนสต็อก
-  renderAll();
-  toast('ยกเลิกบิลและคืนสต็อกแล้ว');
-});
 
 function renderAll() {
   renderStats();
