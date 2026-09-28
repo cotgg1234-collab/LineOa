@@ -14,8 +14,8 @@ const el = {
   tbody: $('tbody'), listEmpty: $('listEmpty'), count: $('count'),
   filter: $('filter'), lowOnly: $('lowOnly'), resetStore: $('resetStore'),
   fillStock: $('fillStock'), printAll: $('printAll'),
-  qrModal: $('qrModal'), qrAdded: $('qrAdded'), qrBox: $('qrBox'), qrName: $('qrName'), qrSub: $('qrSub'),
-  qrPrint: $('qrPrint'), qrClose: $('qrClose'),
+  qrModal: $('qrModal'), qrAdded: $('qrAdded'), qrImg: $('qrImg'),
+  qrDownload: $('qrDownload'), qrPrint: $('qrPrint'), qrClose: $('qrClose'), qrX: $('qrX'),
   printArea: $('printArea'),
   toast: $('toast'),
 };
@@ -25,6 +25,8 @@ const baht = (n) => '฿' + Number(n || 0).toLocaleString('th-TH');
 let lowOnly = false;      // กรองเฉพาะสินค้าที่ถึงจุดสั่งซื้อ
 let photo = '';           // รูปในฟอร์มตอนนี้ (data URL)
 let qrProduct = null;     // สินค้าที่เปิด QR อยู่
+let qrPng = '';           // รูป QR + ชื่อสินค้า (data URL) ของสินค้าที่เปิดอยู่
+let qrJustAdded = false;
 
 /** ระดับสต็อก: out = หมด, low = ใกล้หมด, ok = ปกติ */
 function stockLevel(p) {
@@ -170,21 +172,122 @@ function qrReady() {
   return false;
 }
 
+/** แบ่งข้อความเป็นคำ (ภาษาไทยไม่มีเว้นวรรค) — ไม่มี Intl.Segmenter ก็แบ่งตามตัวอักษรแต่ไม่แยกสระ/วรรณยุกต์ออกจากพยัญชนะ */
+function segments(text) {
+  if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+    return [...new Intl.Segmenter('th', { granularity: 'word' }).segment(text)].map((s) => s.segment);
+  }
+  return text.match(/.[ัิ-ฺ็-๎]*/gsu) || [];
+}
+
+/** ตัดชื่อยาวเป็นหลายบรรทัดให้พอดีความกว้าง โดยตัดตามคำ */
+function wrapText(ctx, text, maxWidth, maxLines) {
+  const lines = [];
+  let line = '';
+  for (const seg of segments(text)) {
+    if (ctx.measureText(line + seg).width > maxWidth && line.trim()) {
+      lines.push(line.trim());
+      line = seg;
+    } else {
+      line += seg;
+    }
+  }
+  line = line.trim();
+  if (line) lines.push(line);
+  if (lines.length > maxLines) {
+    lines.length = maxLines;
+    lines[maxLines - 1] = lines[maxLines - 1].slice(0, -1) + '…';
+  }
+  return lines;
+}
+
+/** วาดรูป QR พร้อมชื่อสินค้า ราคา รหัส ใต้ QR — คืน data URL (PNG) */
+async function qrImage(p) {
+  if (document.fonts) await document.fonts.ready;
+  const qr = qrcode(0, 'M');
+  qr.addData(p.sku);
+  qr.make();
+
+  const W = 600, pad = 44, font = '"Noto Sans Thai", sans-serif';
+  const n = qr.getModuleCount();
+  const cell = Math.floor((W - pad * 2) / n);
+  const size = cell * n;
+  const x0 = Math.round((W - size) / 2);
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.font = `700 40px ${font}`;
+  const lines = wrapText(ctx, p.name, W - pad * 2, 2);
+  canvas.width = W;
+  canvas.height = pad + size + 30 + lines.length * 54 + 44 + pad;
+
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#000';
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      if (qr.isDark(r, c)) ctx.fillRect(x0 + c * cell, pad + r * cell, cell, cell);
+    }
+  }
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = '#1b2430';
+  ctx.font = `700 40px ${font}`;
+  let y = pad + size + 30;
+  for (const l of lines) { ctx.fillText(l, W / 2, y, W - pad * 2); y += 54; }
+  ctx.fillStyle = '#6b7a8c';
+  ctx.font = `400 28px ${font}`;
+  ctx.fillText(`${baht(p.price)} · รหัส ${p.sku}`, W / 2, y + 4);
+
+  return canvas.toDataURL('image/png');
+}
+
 /** justAdded = เปิดหลังกดเพิ่มสินค้า (โชว์ข้อความสำเร็จ + ปุ่มเพิ่มชิ้นถัดไป) */
-function showQr(p, justAdded = false) {
+async function showQr(p, justAdded = false) {
   if (!qrReady()) return;
   qrProduct = p;
-  el.qrAdded.hidden = !justAdded;
-  el.qrBox.innerHTML = qrSvg(p.sku);
-  el.qrName.textContent = p.name;
-  el.qrSub.textContent = `รหัส ${p.sku} · ${baht(p.price)}`;
+  qrJustAdded = justAdded;
+  qrPng = '';
+  el.qrAdded.textContent = justAdded ? 'เพิ่มสินค้าแล้ว' : 'QR สินค้า';
+  el.qrAdded.classList.toggle('ok', justAdded);
   el.qrClose.textContent = justAdded ? 'เพิ่มสินค้าถัดไป' : 'ปิด';
+  el.qrImg.removeAttribute('src');
   el.qrModal.hidden = false;
+  const png = await qrImage(p);
+  if (qrProduct === p) { qrPng = png; el.qrImg.src = png; }
 }
 
 function closeQr() {
   el.qrModal.hidden = true;
-  if (!el.qrAdded.hidden) el.name.focus();
+  if (qrJustAdded) el.name.focus();
+}
+
+/** ดาวน์โหลดรูป QR — มือถือใช้เมนูแชร์ (มี "บันทึกรูปภาพ") ถ้าทำได้ ไม่งั้นดาวน์โหลดไฟล์ */
+async function downloadQr() {
+  if (!qrPng) return;
+  const p = qrProduct;
+  const filename = `QR-${p.sku}-${p.name}.png`.replace(/[\\/:*?"<>|]/g, '');
+  const blob = await (await fetch(qrPng)).blob();
+  const file = new File([blob], filename, { type: 'image/png' });
+
+  const mobile = matchMedia('(pointer: coarse)').matches;
+  if (mobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file] });
+      return;
+    } catch (err) {
+      if (err.name === 'AbortError') return;   // ผู้ใช้กดยกเลิก
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 /* ---------- พิมพ์ ---------- */
@@ -201,7 +304,9 @@ function printLabels(list) {
 window.addEventListener('afterprint', () => { el.printArea.innerHTML = ''; });
 
 el.qrPrint.addEventListener('click', () => printLabels([qrProduct]));
+el.qrDownload.addEventListener('click', downloadQr);
 el.qrClose.addEventListener('click', closeQr);
+el.qrX.addEventListener('click', closeQr);
 el.qrModal.addEventListener('click', (e) => { if (e.target === el.qrModal) closeQr(); });
 
 el.printAll.addEventListener('click', () => {
