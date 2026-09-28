@@ -43,10 +43,6 @@ body {
   box-shadow: var(--shadow);
 }
 
-.brand { display: flex; align-items: center; gap: 12px; flex: 0 1 auto; min-width: 0; }
-.brand h1, .brand .sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.brand h1 { margin: 0; font-size: 20px; }
-.sub { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
 
 .search-wrap {
   position: relative;
@@ -774,8 +770,6 @@ details.more[open] summary { color: var(--ink); }
     gap: 10px;
     padding: 10px 14px;
   }
-  .brand h1 { font-size: 16px; }
-  .sub { display: none; }
   .search-wrap { order: 3; flex: 1 1 180px; max-width: none; }
   .scan-btn { order: 3; padding: 11px 14px; font-size: 15px; }
   #search { font-size: 16px; padding: 11px 40px 11px 42px; }
