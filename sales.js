@@ -27,16 +27,10 @@ function toast(msg) {
 function renderStats() {
   const today = Sales.summary(Sales.lastDays(1));
   const period = Sales.summary(Sales.lastDays(days));
-  const cycle = Settings.cycleStatus();
 
   const tiles = [
     { label: 'ยอดขายวันนี้', value: baht(today.total), sub: `${today.count} บิล · ${today.qty} ชิ้น` },
     { label: `ยอดขาย ${days} วัน`, value: baht(period.total), sub: `${period.count} บิล` },
-    {
-      label: 'รอบสั่งของ',
-      value: cycle.remaining > 0 ? `อีก ${cycle.remaining} วัน` : 'ถึงรอบแล้ว',
-      accent: cycle.remaining <= 3,
-    },
   ];
 
   el.stats.innerHTML = tiles.map((t) => `
