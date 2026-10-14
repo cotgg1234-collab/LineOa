@@ -195,15 +195,20 @@ const DAY_MS = 86400000;
 
 /* ---------- ตั้งค่า ---------- */
 const SETTINGS_DEFAULTS = {
-  cycleDays: 14,        // รอบสั่งของ (วัน)
-  safety: 1.2,          // เผื่อ 20%
+  cycleDays: 14,        // รอบสั่งของ (วัน) — ไปรับของทุก 14 วัน
   historyDays: 28,      // ใช้ประวัติกี่วันย้อนหลังในการหาค่าเฉลี่ย
   lastReceivedAt: null, // วันที่รับของล่าสุด = จุดเริ่มรอบปัจจุบัน
 };
 
 const Settings = {
+  /** รอบสั่งของกับช่วงประวัติเป็นค่าคงที่ (ไม่มีหน้าตั้งค่า) — ค่าที่เคยบันทึกไว้ในเครื่องจะไม่ถูกใช้ */
   get() {
-    return { ...SETTINGS_DEFAULTS, ...readJSON(SETTINGS_KEY, {}) };
+    return {
+      ...SETTINGS_DEFAULTS,
+      ...readJSON(SETTINGS_KEY, {}),
+      cycleDays: SETTINGS_DEFAULTS.cycleDays,
+      historyDays: SETTINGS_DEFAULTS.historyDays,
+    };
   },
 
   set(patch) {
@@ -344,6 +349,9 @@ const Sales = {
 /** หารด้วยอย่างน้อยเท่านี้วันเสมอ — กันยอดขายวันเดียว (เช่น ขายวันแรก 40 ชิ้น) ถูกคูณเป็นยอดสั่งทั้งรอบ */
 const MIN_HISTORY_DAYS = 7;
 
+/** ค่า Z ของความมั่นใจ 95% ว่าของไม่ขาด (ใช้คำนวณ Safety Stock = Z × σ × √วัน) */
+const SAFETY_Z = 1.65;
+
 const Forecast = {
   bills() {
     return Sales.lastDays(Settings.get().historyDays);
@@ -359,39 +367,63 @@ const Forecast = {
     return Math.min(days, s.historyDays);
   },
 
-  /** ขายเฉลี่ยต่อวันของแต่ละ sku — คืน Map(sku -> number)
-   *  ข้อมูลยังไม่ถึง 7 วันก็หารด้วย 7 (ถือว่าวันที่ยังไม่มีข้อมูลขายได้ 0) */
-  avgDaily() {
+  /** สถิติยอดขายรายวันของแต่ละ sku — คืน Map(sku -> { avg, sd })
+   *  avg = ขายเฉลี่ยต่อวัน, sd = ส่วนเบี่ยงเบนมาตรฐานของยอดขายรายวัน (σ)
+   *  ข้อมูลยังไม่ถึง 7 วันก็นับเป็น 7 (ถือว่าวันที่ยังไม่มีข้อมูลขายได้ 0)
+   *  วันที่ไม่ได้ขายนับเป็น 0 เพื่อให้ avg กับ σ สะท้อนความผันผวนจริง */
+  dailyStats() {
     const span = this.historySpan() && Math.max(this.historySpan(), MIN_HISTORY_DAYS);
-    const acc = new Map();
-    if (!span) return acc;
+    const stats = new Map();
+    if (!span) return stats;
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dayIndex = new Map();   // YYYY-MM-DD -> ลำดับวัน 0..span-1
+    for (let i = 0; i < span; i++) dayIndex.set(dayKey(today.getTime() - i * DAY_MS), i);
+
+    const perDay = new Map();     // sku -> number[span]
     for (const b of this.bills()) {
+      const d = dayIndex.get(dayKey(b.soldAt));
+      if (d === undefined) continue;
       for (const i of b.items) {
-        acc.set(i.sku, (acc.get(i.sku) || 0) + i.qty);
+        if (!perDay.has(i.sku)) perDay.set(i.sku, new Array(span).fill(0));
+        perDay.get(i.sku)[d] += i.qty;
       }
     }
-    for (const [sku, qty] of acc) acc.set(sku, qty / span);
-    return acc;
+
+    for (const [sku, days] of perDay) {
+      const avg = days.reduce((s, n) => s + n, 0) / span;
+      const variance = days.reduce((s, n) => s + (n - avg) ** 2, 0) / (span - 1);
+      stats.set(sku, { avg, sd: Math.sqrt(variance) });
+    }
+    return stats;
   },
 
-  /** ใบสั่งของของรอบปัจจุบัน
-   *  คืน [{ product, avg, daysLeft, target, suggested, basis }]
-   *  basis = 'history' (คำนวณจากยอดขาย) | 'manual' (ใช้จุดสั่งซื้อที่กรอกไว้) */
+  /** ใบสั่งของของรอบปัจจุบัน — ถูกต้องไม่ว่าเปิดดูวันไหนของรอบ
+   *  คาดว่าเหลือวันไปรับ = คงเหลือตอนนี้ − ขายเฉลี่ย/วัน × วันที่เหลือก่อนไปรับ (ต่ำสุด 0 — ของหมดแล้วขายต่อไม่ได้)
+   *  Safety Stock = Z × σ × √(วันที่เหลือก่อนไปรับ + วันต่อรอบ)   (วันไปรับของไม่ได้ขาย จึงไม่บวกเพิ่ม)
+   *  เป้าสต็อก   = ขายเฉลี่ย/วัน × วันต่อรอบ + Safety Stock
+   *  ต้องสั่ง     = เป้าสต็อก − คาดว่าเหลือวันไปรับ
+   *  คืน [{ product, avg, daysLeft, safetyStock, target, suggested, basis }]
+   *  basis = 'history' (คำนวณจากยอดขาย) | 'manual' (ยังไม่เคยขาย ใช้จุดสั่งซื้อ × 2) */
   suggest() {
     const s = Settings.get();
-    const avgMap = this.avgDaily();
+    const untilPickup = Math.max(0, Settings.cycleStatus().remaining);
+    const horizon = untilPickup + s.cycleDays;
+    const statsMap = this.dailyStats();
 
     return Store.all().map((p) => {
-      const avg = avgMap.get(p.sku) || 0;
+      const { avg, sd } = statsMap.get(p.sku) || { avg: 0, sd: 0 };
       const daysLeft = avg > 0 ? p.stock / avg : Infinity;
+      const atPickup = Math.max(0, p.stock - avg * untilPickup);   // คาดว่าเหลือวันไปรับ
 
-      let target, basis;
+      let target, basis, safetyStock = 0;
       if (avg > 0) {
-        target = Math.ceil(avg * s.cycleDays * s.safety);
+        safetyStock = SAFETY_Z * sd * Math.sqrt(horizon);
+        target = Math.ceil(avg * s.cycleDays + safetyStock);
         basis = 'history';
       } else {
-        target = p.reorder * 2;          // ยังไม่มีข้อมูลขาย — ใช้จุดสั่งซื้อที่กรอกมือ
+        target = p.reorder * 2;          // ยังไม่เคยขาย — ใช้จุดสั่งซื้อ × 2
         basis = 'manual';
       }
 
@@ -399,8 +431,9 @@ const Forecast = {
         product: p,
         avg,
         daysLeft,
+        safetyStock: Math.ceil(safetyStock),
         target,
-        suggested: Math.max(0, target - p.stock),
+        suggested: Math.max(0, Math.ceil(target - atPickup)),
         basis,
       };
     });

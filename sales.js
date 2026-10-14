@@ -32,7 +32,6 @@ function renderStats() {
   const tiles = [
     { label: 'ยอดขายวันนี้', value: baht(today.total), sub: `${today.count} บิล · ${today.qty} ชิ้น` },
     { label: `ยอดขาย ${days} วัน`, value: baht(period.total), sub: `${period.count} บิล` },
-    { label: 'เฉลี่ยต่อบิล', value: baht(period.average), sub: `จาก ${period.count} บิล` },
     {
       label: 'รอบสั่งของ',
       value: cycle.remaining > 0 ? `อีก ${cycle.remaining} วัน` : 'ถึงรอบแล้ว',

@@ -10,8 +10,6 @@ const el = {
   cycleHead: $('cycleHead'),
   listTitle: $('listTitle'),
   orderList: $('orderList'), orderEmpty: $('orderEmpty'), orderActions: $('orderActions'),
-  daysDec: $('daysDec'), daysVal: $('daysVal'), daysInc: $('daysInc'),
-  safetyDec: $('safetyDec'), safetyVal: $('safetyVal'), safetyInc: $('safetyInc'),
   historyList: $('historyList'), historyEmpty: $('historyEmpty'),
   toast: $('toast'),
 };
@@ -281,38 +279,6 @@ function renderRecvProgress(cycle) {
   t.innerHTML = `ติ๊กแล้ว <b>${done}</b> จาก <b>${cycle.lines.length}</b> รายการ`;
 }
 
-/* ---------- ตั้งค่ารอบ ---------- */
-const DAYS_MIN = 1, DAYS_MAX = 60;
-const SAFETY_MAX = 100;   // เผื่อได้สูงสุด 100%
-
-function renderSettings() {
-  const s = Settings.get();
-  const pct = Math.round((s.safety - 1) * 100);
-  el.daysVal.textContent = s.cycleDays;
-  el.safetyVal.textContent = pct;
-  el.daysDec.disabled = s.cycleDays <= DAYS_MIN;
-  el.daysInc.disabled = s.cycleDays >= DAYS_MAX;
-  el.safetyDec.disabled = pct <= 0;
-  el.safetyInc.disabled = pct >= SAFETY_MAX;
-}
-
-function changeDays(d) {
-  const days = Math.min(DAYS_MAX, Math.max(DAYS_MIN, Settings.get().cycleDays + d));
-  Settings.set({ cycleDays: days });
-  renderAll();
-}
-
-function changeSafety(d) {
-  const pct = Math.min(SAFETY_MAX, Math.max(0, Math.round((Settings.get().safety - 1) * 100) + d));
-  Settings.set({ safety: 1 + pct / 100 });
-  renderAll();
-}
-
-el.daysDec.addEventListener('click', () => changeDays(-1));
-el.daysInc.addEventListener('click', () => changeDays(1));
-el.safetyDec.addEventListener('click', () => changeSafety(-5));
-el.safetyInc.addEventListener('click', () => changeSafety(5));
-
 /* ---------- ของที่ต้องรับ vs รับจริง แต่ละรอบ ---------- */
 /** สถานะของ 1 รายการ: ครบ / ขาด / เกิน */
 function receiveStatus(ordered, received) {
@@ -361,7 +327,6 @@ function renderAll() {
   const open = Cycles.open();
   if (open) renderReceiveMode(open);
   else renderOrderMode();
-  renderSettings();
   renderHistory();
 }
 
