@@ -109,25 +109,13 @@ function renderTable() {
       </div>
       <div class="prod-stock">
         <span class="prod-stock-label">คงเหลือ</span>
-        <span class="big-stepper">
-          <button class="big-step" data-act="minus" type="button" aria-label="ลดสต็อก 1">−</button>
-          <b class="big-num stock-num ${stockLevel(p)}">${p.stock}</b>
-          <button class="big-step" data-act="plus" type="button" aria-label="เพิ่มสต็อก 1">+</button>
-        </span>
+        <b class="big-num stock-num ${stockLevel(p)}">${p.stock}</b>
       </div>
       <div class="prod-actions">
         <button class="act-btn" data-act="qr" type="button">QR</button>
         <button class="act-btn" data-act="edit" type="button">แก้ไข</button>
         <button class="act-btn danger" data-act="del" type="button">ลบ</button>
       </div>`;
-    tr.querySelector('[data-act="minus"]').addEventListener('click', () => {
-      Store.adjustStock(p.sku, -1);
-      refreshAll();
-    });
-    tr.querySelector('[data-act="plus"]').addEventListener('click', () => {
-      Store.adjustStock(p.sku, 1);
-      refreshAll();
-    });
     tr.querySelector('[data-act="qr"]').addEventListener('click', () => showQr(p));
     tr.querySelector('[data-act="edit"]').addEventListener('click', () => startEdit(p));
     tr.querySelector('[data-act="del"]').addEventListener('click', () => {

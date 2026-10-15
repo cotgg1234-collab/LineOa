@@ -68,7 +68,8 @@ function renderChart() {
 
 /* ---------- สินค้าขายดี ---------- */
 function renderTop() {
-  const list = Sales.topProducts(days, 8);
+  // นับเฉพาะรอบการขายนี้ (ตั้งแต่วันรับของล่าสุด) ไม่ขึ้นกับปุ่มเลือกช่วงของกราฟ
+  const list = Sales.topProducts(Sales.range(Settings.cycleStatus().start, new Date()), 5);
   const max = Math.max(...list.map((p) => p.qty), 1);
   el.topEmpty.hidden = list.length > 0;
 

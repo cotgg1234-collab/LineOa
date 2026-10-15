@@ -318,10 +318,10 @@ const Sales = {
     return out;
   },
 
-  /** สินค้าขายดีใน N วันล่าสุด — คืน [{ sku, name, qty, total }] */
-  topProducts(days, limit = 10) {
+  /** สินค้าขายดีจากชุดบิล (เรียงตามจำนวนชิ้น) — คืน [{ sku, name, qty, total }] */
+  topProducts(bills, limit = 10) {
     const acc = new Map();
-    for (const b of this.lastDays(days)) {
+    for (const b of bills) {
       for (const i of b.items) {
         const cur = acc.get(i.sku) || { sku: i.sku, name: i.name, qty: 0, total: 0 };
         cur.qty += i.qty;
