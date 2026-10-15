@@ -1,8 +1,7 @@
 /* cycle.js — หน้ารอบสั่งของ (ออกแบบให้ตัวใหญ่ ปุ่มใหญ่ ใช้ง่ายบนมือถือ)
  * หน้าเดียว 2 โหมด:
- *   1) สั่งของ  — นับถอยหลัง + รายการที่ต้องสั่งพร้อมจำนวน (ระบบคำนวณให้ แก้จำนวนได้) + ส่งรายการทาง LINE
+ *   1) สั่งของ  — นับถอยหลัง + รายการที่ต้องสั่งพร้อมจำนวน (ระบบคำนวณให้อัตโนมัติ) + ส่งรายการทาง LINE
  *   2) รับของ   — ติ๊กของที่ได้รับ (จำนวนไม่ตรงแก้ได้) -> เติมสต็อก เริ่มรอบใหม่
- * จำนวนที่แก้ในใบสั่งเก็บใน localStorage ปิดหน้าแล้วเปิดใหม่ไม่หาย
  */
 
 const $ = (id) => document.getElementById(id);
@@ -24,26 +23,12 @@ function toast(msg) {
   toastTimer = setTimeout(() => { el.toast.hidden = true; }, 2000);
 }
 
-/* ---------- จำนวนที่แก้ในใบสั่ง (เก็บไว้ในเครื่อง) ---------- */
-const DRAFT_KEY = 'pos.orderDraft.v1';
+// จำนวนสั่งคำนวณอัตโนมัติ แก้เองไม่ได้แล้ว — ลบตัวเลขที่เคยแก้ค้างไว้ในเครื่อง
+try { localStorage.removeItem('pos.orderDraft.v1'); } catch { /* ไม่มี localStorage */ }
 
-const Draft = {
-  get() { return readJSON(DRAFT_KEY, {}).qty || {}; },
-  setQty(sku, n) {
-    const qty = this.get();
-    qty[sku] = Math.max(0, n);
-    writeJSON(DRAFT_KEY, { qty });
-  },
-  clear() { writeJSON(DRAFT_KEY, {}); },
-};
-
-/** รายการที่ต้องสั่ง (ระบบคำนวณ) พร้อมจำนวนที่จะสั่ง — คืน [{ product, suggested, avg, daysLeft, qty }] */
+/** รายการที่ต้องสั่ง (ระบบคำนวณ) — คืน [{ product, suggested, avg, daysLeft, qty }] */
 function orderRows() {
-  const qty = Draft.get();
-  return Forecast.toOrder().map((r) => ({
-    ...r,
-    qty: r.product.sku in qty ? qty[r.product.sku] : r.suggested,
-  }));
+  return Forecast.toOrder().map((r) => ({ ...r, qty: r.suggested }));
 }
 
 /* ---------- แถบสถานะรอบ ---------- */
@@ -105,7 +90,7 @@ function renderOrderMode() {
     const p = r.product;
 
     const li = document.createElement('li');
-    li.className = 'order-card' + (r.qty > 0 ? '' : ' zero');
+    li.className = 'order-card';
     li.innerHTML = `
       <div class="order-top">
         ${thumbHTML(p, 'order-thumb')}
@@ -114,13 +99,10 @@ function renderOrderMode() {
           <p class="order-facts">เหลือ <b class="${p.stock <= 0 ? 'out' : ''}">${p.stock}</b> ชิ้น</p>
         </div>
       </div>
-      ${stepperHTML(r.qty, 'ต้องสั่ง')}`;
-
-    bindStepper(li, (n) => {
-      Draft.setQty(p.sku, n);
-      li.classList.toggle('zero', n === 0);
-      renderTotals();
-    });
+      <div class="order-qty fixed">
+        <span class="order-qty-label">ต้องสั่ง</span>
+        <b class="order-qty-num">${r.qty} <small>ชิ้น</small></b>
+      </div>`;
     el.orderList.appendChild(li);
   }
 
@@ -165,7 +147,6 @@ function placeOrder() {
   if (!lines.length) return toast('ยังไม่มีรายการที่จะสั่ง');
   if (!confirm(`ยืนยันว่าสั่งของ ${lines.length} รายการแล้ว?`)) return;
   Cycles.place(lines);
-  Draft.clear();
   renderAll();
   window.scrollTo({ top: 0, behavior: 'smooth' });
   toast('บันทึกแล้ว — ไปรับของได้เลย');
